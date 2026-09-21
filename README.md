@@ -17,10 +17,10 @@ clock: pick a time control and increment, or play with unlimited time.
   - Clock pauses automatically if the app is backgrounded, and resumes when
     you come back (it doesn't drain your time while you're in another app).
 - Fixed board orientation — White at the bottom, Black at the top — so the
-  device can just lie flat on a table between the two players. The board
-  never flips mid-game; instead, Black's pieces are rotated 180° so they
-  read right-side-up from Black's side of the table, the way pieces face
-  their own player on a real board.
+  device can just lie flat on a table between the two players; the board
+  itself never flips. Instead, every piece rotates 180° as a group each
+  turn, so whoever is about to move sees the whole board, including the
+  opponent's pieces, facing them the right way up.
 - Captured-piece tray and move list for both players.
 - Resign, rematch (same time control), and "new setup" to change the clock.
 
