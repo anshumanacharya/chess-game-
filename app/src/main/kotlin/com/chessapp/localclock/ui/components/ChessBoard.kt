@@ -134,24 +134,28 @@ private fun SquareCell(
                 val fontSizePx = size.toPx() * 0.72f
                 fontSizePx.toSp() to fontSizePx * 0.09f
             }
+            // The Unicode "white piece" glyphs (♔♕♖…) are hollow outlines with almost no
+            // fillable body, so a white-fill/black-stroke treatment on them just looks thin
+            // and mostly black. Use the solid "black piece" glyph shapes for both colors here
+            // and let color/stroke do the coloring instead.
+            val glyph = pieceGlyph(it.type, EngineColor.BLACK)
             if (it.color == EngineColor.WHITE) {
-                // Layer a black stroke behind a white fill so white pieces read clearly on light squares.
                 Box(contentAlignment = Alignment.Center) {
                     Text(
-                        text = pieceGlyph(it),
+                        text = glyph,
                         fontSize = fontSizeSp,
                         color = UiColor.Black,
                         style = TextStyle(drawStyle = Stroke(width = outlineWidthPx))
                     )
                     Text(
-                        text = pieceGlyph(it),
+                        text = glyph,
                         fontSize = fontSizeSp,
                         color = UiColor.White
                     )
                 }
             } else {
                 Text(
-                    text = pieceGlyph(it),
+                    text = glyph,
                     fontSize = fontSizeSp,
                     color = UiColor(0xFF141414),
                     modifier = Modifier.rotate(180f)
