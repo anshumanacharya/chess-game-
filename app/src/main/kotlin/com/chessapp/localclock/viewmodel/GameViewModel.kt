@@ -8,18 +8,28 @@ import androidx.lifecycle.viewModelScope
 import com.chessapp.engine.ClockConfig
 import com.chessapp.engine.ClockState
 import com.chessapp.engine.Color
-import com.chessapp.engine.GameState
 import com.chessapp.engine.GameStatus
 import com.chessapp.engine.Move
 import com.chessapp.engine.MoveGenerator
 import com.chessapp.engine.PieceType
 import com.chessapp.engine.Square
+import com.chessapp.localclock.game.GameSource
+import com.chessapp.localclock.game.LocalGameSource
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
-class GameViewModel : ViewModel() {
+/**
+ * [gameSource] defaults to on-device pass-and-play but is swappable — a future online mode
+ * (e.g. backed by Lichess's Board API) plugs in as another [GameSource] without this class or
+ * the UI it drives needing to change. `@JvmOverloads` keeps the zero-arg constructor Compose's
+ * `viewModel()` helper instantiates via reflection; a custom `ViewModelProvider.Factory` would
+ * supply a different source later.
+ */
+class GameViewModel @JvmOverloads constructor(
+    private val gameSource: GameSource = LocalGameSource()
+) : ViewModel() {
 
     var uiState by mutableStateOf(GameUiState())
         private set
@@ -31,7 +41,7 @@ class GameViewModel : ViewModel() {
         tickerJob?.cancel()
         lastClockConfig = clockConfig
         uiState = GameUiState(
-            position = GameState.newGame(),
+            position = gameSource.newGame(),
             clock = ClockState.from(clockConfig).start(Color.WHITE)
         )
         if (!clockConfig.isUnlimited) startTicker()
@@ -91,7 +101,7 @@ class GameViewModel : ViewModel() {
             return
         }
 
-        val movesToSquare = MoveGenerator.legalMovesFrom(pos, selected).filter { it.to == square }
+        val movesToSquare = gameSource.legalMovesFrom(pos, selected).filter { it.to == square }
         when {
             movesToSquare.isEmpty() -> {
                 uiState = if (pieceAtSquare != null && pieceAtSquare.color == pos.sideToMove) {
@@ -121,7 +131,7 @@ class GameViewModel : ViewModel() {
     private fun applyMove(move: Move) {
         val state = uiState
         val movedColor = state.position.sideToMove
-        val newPosition = MoveGenerator.applyMove(state.position, move)
+        val newPosition = gameSource.applyMove(state.position, move)
         val nextColor = newPosition.sideToMove
         val newClock = state.clock.onMoveCompleted(movedColor, nextColor)
 

@@ -32,6 +32,11 @@ data class GameUiState(
     val pendingPromotion: PendingPromotion? = null,
     val gameOverReason: GameOverReason? = null
 ) {
+    // These read pure, already-committed board state to drive display (status text, highlighted
+    // legal-move dots) rather than committing anything, so they call MoveGenerator directly
+    // regardless of which GameSource produced `position` — only GameViewModel's actual move
+    // submission path goes through GameSource, since that's the part a future online source
+    // needs to intercept.
     val status: GameStatus get() = MoveGenerator.status(position)
     val lastMove: Move? get() = position.moveHistory.lastOrNull()
 
