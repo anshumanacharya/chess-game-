@@ -5,6 +5,11 @@ large ~2400×2200 tablet-class display lying flat on a table between two
 players, with an **optional** chess clock: pick a time control and increment,
 or play with unlimited time.
 
+A plain HTML/JS build of the same rules engine is also hosted on GitHub
+Pages for quick testing in a browser — see [Web test build](#web-test-build-github-pages)
+below. The Android app is the actual target; the web build exists purely so
+changes can be tried out without an Android device or emulator.
+
 ## Features
 
 - Full chess rules: legal move generation, check/checkmate/stalemate, castling
@@ -38,7 +43,7 @@ or play with unlimited time.
 
 ## Project layout
 
-This is a two-module Gradle project:
+This is a three-module Gradle project:
 
 - **`chess-engine/`** — pure Kotlin (no Android dependency) chess rules engine
   and clock model. Fully unit-tested (`ChessGameTest`, `ClockStateTest`)
@@ -46,13 +51,53 @@ This is a two-module Gradle project:
   (fool's mate, scholar's mate), stalemate, insufficient material, and the
   clock's tick/increment/flag-fall behavior.
 - **`app/`** — the Android app (Kotlin + Jetpack Compose + Material 3) that
-  consumes `chess-engine` and renders the board, clocks, and setup screen.
+  consumes `chess-engine` and renders the board, clocks, and setup screen. Its
+  `GameViewModel` talks to the rules engine only through a small `GameSource`
+  interface (`app/.../game/GameSource.kt`); `LocalGameSource` is today's
+  on-device pass-and-play, wired in as the default. That seam exists so an
+  online mode (e.g. backed by Lichess's Board API) can plug in later as
+  another `GameSource` without changing the ViewModel or UI.
+- **`web-engine/`** — a Kotlin/JS build of the *exact same* chess-engine
+  source (shared via a Gradle `srcDir`, not copied) plus a small JS-facing
+  facade (`JsApi.kt`: `JsGame`, `JsClock`) for the web test build below.
+  `chess-engine` itself is untouched by this, so the Android app's dependency
+  on it is unaffected.
 
 Splitting the rules engine out like this means the hardest-to-get-right part
-of the app (move legality) is plain JVM code you can test with `gradle test`
-without touching the Android toolchain at all.
+of the app (move legality) is plain Kotlin you can test with `gradle test`
+without touching the Android toolchain at all — and, via `web-engine`, reuse
+in a browser too.
 
-## Building
+## Web test build (GitHub Pages)
+
+`web/` is a small hand-written HTML/CSS/JS page (`index.html`, `style.css`,
+`app.js`, no framework or build step of its own) that mirrors the Android
+app's behavior — fixed board orientation with per-turn piece rotation, the
+same minimalist palette, player bars with clocks and captured pieces, move
+list, promotion/resign/game-over overlays — driven by `web-engine`'s compiled
+`chess-engine.js` bundle for all the actual rules and clock logic.
+
+- **Try it locally**: open `web/index.html` directly in a browser — the
+  compiled bundle is checked in, so no build step is required just to look at
+  it.
+- **Rebuild the engine bundle** after changing `chess-engine/` or
+  `web-engine/`:
+  ```bash
+  ./gradlew :web-engine:nodeTest                 # run the shared test suite on the JS target
+  ./gradlew :web-engine:browserProductionWebpack # produce web-engine/build/kotlin-webpack/js/productionExecutable/chess-engine.js
+  cp web-engine/build/kotlin-webpack/js/productionExecutable/chess-engine.js web/chess-engine.js
+  ```
+- **Hosting**: `.github/workflows/deploy-pages.yml` rebuilds the bundle fresh
+  from source and deploys `web/` to GitHub Pages on every push to `main` that
+  touches `chess-engine/`, `web-engine/`, or `web/` (so the live site can
+  never drift from what's committed). This needs the repository's
+  **Settings → Pages → Source** set to **GitHub Actions** once, which I
+  can't do from here — after that the workflow handles every future deploy.
+- This is a testing convenience, not a second product: no framework, no
+  responsive-design polish beyond a basic narrow-viewport fallback, and no
+  attempt at pixel parity with the Android layout.
+
+## Building the Android app
 
 Open the project root in Android Studio (Jellyfish/Koala or newer) and let it
 sync — it targets `compileSdk 34` / `minSdk 26` and uses AGP 8.5.2 with
@@ -91,12 +136,23 @@ chess-engine/
 app/
   src/main/kotlin/com/chessapp/localclock/
     MainActivity.kt
+    game/GameSource.kt              # LocalGameSource today; a future online source plugs in here
     viewmodel/GameViewModel.kt, GameUiState.kt
     ui/screens/SetupScreen.kt, GameScreen.kt
     ui/components/ChessBoard.kt, ClockDisplay.kt, CapturedPiecesRow.kt,
                   PromotionDialog.kt, GameOverDialog.kt, MoveHistoryList.kt,
                   PieceGlyph.kt
     ui/theme/Theme.kt
+
+web-engine/                          # Kotlin/JS, shares chess-engine's src/main/kotlin
+  src/main/kotlin/JsApi.kt           # JsGame / JsClock — the only web-specific engine code
+  src/test/kotlin/                   # EngineOnJsTest.kt (ported), JsApiTest.kt
+
+web/                                 # the static site GitHub Pages serves
+  index.html, style.css, app.js
+  chess-engine.js                    # compiled from web-engine; regenerated by CI on every deploy
+
+.github/workflows/deploy-pages.yml
 ```
 
 ## Design notes
@@ -109,3 +165,14 @@ app/
 - The clock is modeled the same way (`ClockState.tick(elapsedMillis)` /
   `onMoveCompleted(...)`), driven by a 100ms coroutine ticker in
   `GameViewModel`, and is paused/resumed with the Activity lifecycle.
+- `web-engine`'s tests don't reuse `chess-engine`'s test *files* directly
+  (only its production source): Kotlin/JS test function names can't contain
+  spaces, and chess-engine's JVM tests are named with backtick-quoted natural
+  language (`` `castling is illegal through check` ``). `EngineOnJsTest`
+  covers the same scenarios under plain camelCase names instead.
+- The web build's `app.js` only patches the two clock displays in place on
+  each 100ms tick (`updateClockDisplays()`); a full re-render only happens on
+  an actual game-state change (a move, promotion, resign, game over). An
+  earlier version re-rendered the whole board on every tick, which a
+  Playwright-driven click could race against — worth keeping in mind if
+  you're tempted to simplify that back to one `render()` call.

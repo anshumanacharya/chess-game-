@@ -1,0 +1,58 @@
+name: Deploy web test build to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "chess-engine/**"
+      - "web-engine/**"
+      - "web/**"
+      - ".github/workflows/deploy-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Run the shared engine's test suite on the JS target
+        run: ./gradlew :web-engine:nodeTest
+
+      # Rebuilds the chess rules/clock engine for the browser from source, so the deployed
+      # bundle is always current even if the committed web/chess-engine.js was stale.
+      - name: Build the Kotlin/JS engine bundle
+        run: ./gradlew :web-engine:browserProductionWebpack
+
+      - name: Copy the fresh bundle into the static site
+        run: cp web-engine/build/kotlin-webpack/js/productionExecutable/chess-engine.js web/chess-engine.js
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

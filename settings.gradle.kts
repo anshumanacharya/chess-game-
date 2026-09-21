@@ -17,3 +17,4 @@ dependencyResolutionManagement {
 rootProject.name = "LocalChessClock"
 include(":app")
 include(":chess-engine")
+include(":web-engine")
