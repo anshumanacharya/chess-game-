@@ -39,7 +39,8 @@ import com.chessapp.localclock.viewmodel.GameUiState
 /**
  * Renders the 8x8 board in a fixed orientation (White at the bottom, Black at the top) so
  * the device can lie flat on a table between the two players without flipping every move.
- * Black's pieces are rotated 180° so they read right-side-up from Black's side of the board.
+ * The piece glyphs (every piece, both colors) rotate 180° together whenever it's Black's turn,
+ * so whoever is about to move sees the whole board — including the opponent's pieces — facing them.
  */
 @Composable
 fun ChessBoard(
@@ -54,6 +55,7 @@ fun ChessBoard(
     val kingInCheckSquare = if (uiState.status == GameStatus.CHECK || uiState.status == GameStatus.CHECKMATE) {
         pos.board.findKing(pos.sideToMove)
     } else null
+    val pieceRotationDegrees = if (pos.sideToMove == EngineColor.BLACK) 180f else 0f
 
     BoxWithConstraints(modifier = modifier.aspectRatio(1f)) {
         val squareSize = maxWidth / 8
@@ -70,6 +72,7 @@ fun ChessBoard(
                             size = squareSize,
                             isLight = (file + rank) % 2 == 1,
                             piece = piece,
+                            pieceRotationDegrees = pieceRotationDegrees,
                             isSelected = uiState.selectedSquare == square,
                             isLegalTarget = square in legalTargets,
                             isLastMove = uiState.lastMove?.let { it.from == square || it.to == square } == true,
@@ -88,6 +91,7 @@ private fun SquareCell(
     size: Dp,
     isLight: Boolean,
     piece: Piece?,
+    pieceRotationDegrees: Float,
     isSelected: Boolean,
     isLegalTarget: Boolean,
     isLastMove: Boolean,
@@ -139,8 +143,8 @@ private fun SquareCell(
             // and mostly black. Use the solid "black piece" glyph shapes for both colors here
             // and let color/stroke do the coloring instead.
             val glyph = pieceGlyph(it.type, EngineColor.BLACK)
-            if (it.color == EngineColor.WHITE) {
-                Box(contentAlignment = Alignment.Center) {
+            Box(contentAlignment = Alignment.Center, modifier = Modifier.rotate(pieceRotationDegrees)) {
+                if (it.color == EngineColor.WHITE) {
                     Text(
                         text = glyph,
                         fontSize = fontSizeSp,
@@ -152,14 +156,13 @@ private fun SquareCell(
                         fontSize = fontSizeSp,
                         color = UiColor.White
                     )
+                } else {
+                    Text(
+                        text = glyph,
+                        fontSize = fontSizeSp,
+                        color = UiColor(0xFF141414)
+                    )
                 }
-            } else {
-                Text(
-                    text = glyph,
-                    fontSize = fontSizeSp,
-                    color = UiColor(0xFF141414),
-                    modifier = Modifier.rotate(180f)
-                )
             }
         }
     }
