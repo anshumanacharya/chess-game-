@@ -44,8 +44,8 @@ private fun ChessApp() {
 
     when (screen) {
         is Screen.Setup -> SetupScreen(
-            onStartGame = { config: ClockConfig, flipBoard: Boolean ->
-                viewModel.startNewGame(config, flipBoard)
+            onStartGame = { config: ClockConfig ->
+                viewModel.startNewGame(config)
                 screen = Screen.Game
             }
         )

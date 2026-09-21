@@ -28,7 +28,6 @@ data class PendingPromotion(val from: Square, val to: Square, val options: List<
 data class GameUiState(
     val position: GameState = GameState.newGame(),
     val clock: ClockState = ClockState.from(ClockConfig.UNLIMITED),
-    val flipBoardEachTurn: Boolean = true,
     val selectedSquare: Square? = null,
     val pendingPromotion: PendingPromotion? = null,
     val gameOverReason: GameOverReason? = null

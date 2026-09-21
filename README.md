@@ -16,9 +16,11 @@ clock: pick a time control and increment, or play with unlimited time.
     custom minutes-per-side + Fischer increment.
   - Clock pauses automatically if the app is backgrounded, and resumes when
     you come back (it doesn't drain your time while you're in another app).
-- Board flips each turn by default, so whoever's move it is sees the board
-  from their own side (toggle this off in setup if you'd rather keep a fixed
-  orientation).
+- Fixed board orientation — White at the bottom, Black at the top — so the
+  device can just lie flat on a table between the two players. The board
+  never flips mid-game; instead, Black's pieces are rotated 180° so they
+  read right-side-up from Black's side of the table, the way pieces face
+  their own player on a real board.
 - Captured-piece tray and move list for both players.
 - Resign, rematch (same time control), and "new setup" to change the clock.
 

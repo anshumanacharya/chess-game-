@@ -19,11 +19,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -42,14 +40,13 @@ private enum class ClockMode { TIMED, UNLIMITED }
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SetupScreen(
-    onStartGame: (clockConfig: ClockConfig, flipBoardEachTurn: Boolean) -> Unit
+    onStartGame: (clockConfig: ClockConfig) -> Unit
 ) {
     var clockMode by remember { mutableStateOf(ClockMode.TIMED) }
     var selectedPresetIndex by remember { mutableStateOf(3) } // "10 min"
     var useCustom by remember { mutableStateOf(false) }
     var customMinutes by remember { mutableIntStateOf(15) }
     var customIncrement by remember { mutableIntStateOf(0) }
-    var flipBoardEachTurn by remember { mutableStateOf(true) }
 
     Column(
         modifier = Modifier
@@ -59,7 +56,7 @@ fun SetupScreen(
     ) {
         Text("Local Chess", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         Text(
-            "Two players, one device",
+            "Two players, one device – lay it flat between you",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -131,27 +128,6 @@ fun SetupScreen(
             }
         }
 
-        Spacer(Modifier.height(24.dp))
-        HorizontalDivider()
-        Spacer(Modifier.height(24.dp))
-
-        SectionHeader("Board")
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text("Flip board each turn")
-                Text(
-                    "Each player sees the board from their own side",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Switch(checked = flipBoardEachTurn, onCheckedChange = { flipBoardEachTurn = it })
-        }
-
         Spacer(Modifier.weight(1f))
 
         Button(
@@ -161,7 +137,7 @@ fun SetupScreen(
                     useCustom -> ClockConfig.preset(customMinutes, customIncrement)
                     else -> ClockConfig.PRESETS[selectedPresetIndex].second
                 }
-                onStartGame(config, flipBoardEachTurn)
+                onStartGame(config)
             },
             modifier = Modifier
                 .fillMaxWidth()

@@ -27,18 +27,17 @@ class GameViewModel : ViewModel() {
     private var tickerJob: Job? = null
     private var lastClockConfig: ClockConfig = ClockConfig.UNLIMITED
 
-    fun startNewGame(clockConfig: ClockConfig, flipBoardEachTurn: Boolean) {
+    fun startNewGame(clockConfig: ClockConfig) {
         tickerJob?.cancel()
         lastClockConfig = clockConfig
         uiState = GameUiState(
             position = GameState.newGame(),
-            clock = ClockState.from(clockConfig).start(Color.WHITE),
-            flipBoardEachTurn = flipBoardEachTurn
+            clock = ClockState.from(clockConfig).start(Color.WHITE)
         )
         if (!clockConfig.isUnlimited) startTicker()
     }
 
-    fun rematch() = startNewGame(lastClockConfig, uiState.flipBoardEachTurn)
+    fun rematch() = startNewGame(lastClockConfig)
 
     private fun startTicker() {
         tickerJob?.cancel()

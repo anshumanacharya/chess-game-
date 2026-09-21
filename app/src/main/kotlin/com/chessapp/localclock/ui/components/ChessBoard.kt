@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color as UiColor
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
@@ -34,8 +35,9 @@ import com.chessapp.localclock.ui.theme.BoardSelected
 import com.chessapp.localclock.viewmodel.GameUiState
 
 /**
- * Renders the 8x8 board from the perspective of the side to move when [GameUiState.flipBoardEachTurn]
- * is enabled, which suits pass-and-play local multiplayer (each player sees "their" side at the bottom).
+ * Renders the 8x8 board in a fixed orientation (White at the bottom, Black at the top) so
+ * the device can lie flat on a table between the two players without flipping every move.
+ * Black's pieces are rotated 180° so they read right-side-up from Black's side of the board.
  */
 @Composable
 fun ChessBoard(
@@ -44,7 +46,6 @@ fun ChessBoard(
     modifier: Modifier = Modifier
 ) {
     val pos = uiState.position
-    val flipped = uiState.flipBoardEachTurn && pos.sideToMove == EngineColor.BLACK
     val legalTargets = remember(uiState.selectedSquare, pos) {
         uiState.legalMovesForSelected.map { it.to }.toSet()
     }
@@ -58,8 +59,8 @@ fun ChessBoard(
             for (displayRow in 0..7) {
                 Row {
                     for (displayCol in 0..7) {
-                        val file = if (flipped) 7 - displayCol else displayCol
-                        val rank = if (flipped) displayRow else 7 - displayRow
+                        val file = displayCol
+                        val rank = 7 - displayRow
                         val square = Square(file, rank)
                         val piece = pos.board.pieceAt(square)
 
@@ -130,7 +131,8 @@ private fun SquareCell(
             Text(
                 text = pieceGlyph(it),
                 fontSize = with(density) { (size.toPx() * 0.72f).toSp() },
-                color = if (it.color == EngineColor.WHITE) UiColor(0xFFFAFAFA) else UiColor(0xFF141414)
+                color = if (it.color == EngineColor.WHITE) UiColor(0xFFFAFAFA) else UiColor(0xFF141414),
+                modifier = if (it.color == EngineColor.BLACK) Modifier.rotate(180f) else Modifier
             )
         }
     }
