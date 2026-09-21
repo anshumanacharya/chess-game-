@@ -14,13 +14,16 @@
     { label: "30 min", minutes: 30, increment: 0 }
   ];
 
+  // ︎ (variation selector-15) forces the text presentation of these glyphs rather than
+  // an emoji-style colored one. Without it, iOS Safari renders them as solid black regardless
+  // of any CSS color/-webkit-text-fill-color, so "white" pieces come out looking black too.
   var PIECE_GLYPH = {
-    king: "♚",
-    queen: "♛",
-    rook: "♜",
-    bishop: "♝",
-    knight: "♞",
-    pawn: "♟"
+    king: "♚︎",
+    queen: "♛︎",
+    rook: "♜︎",
+    bishop: "♝︎",
+    knight: "♞︎",
+    pawn: "♟︎"
   };
 
   var GAME_OVER_TEXT = {
