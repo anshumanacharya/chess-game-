@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- 4x4 checkerboard, inset so it survives adaptive-icon masking -->
+    <group android:translateX="22" android:translateY="22">
+        <path android:fillColor="#FFFFFF" android:pathData="M0,0h16v16h-16z" />
+        <path android:fillColor="#FFFFFF" android:pathData="M32,0h16v16h-16z" />
+        <path android:fillColor="#FFFFFF" android:pathData="M16,16h16v16h-16z" />
+        <path android:fillColor="#FFFFFF" android:pathData="M48,16h16v16h-16z" />
+        <path android:fillColor="#FFFFFF" android:pathData="M0,32h16v16h-16z" />
+        <path android:fillColor="#FFFFFF" android:pathData="M32,32h16v16h-16z" />
+        <path android:fillColor="#FFFFFF" android:pathData="M16,48h16v16h-16z" />
+        <path android:fillColor="#FFFFFF" android:pathData="M48,48h16v16h-16z" />
+    </group>
+
+    <!-- crown silhouette, centered above the board motif -->
+    <path
+        android:fillColor="#FFD54A"
+        android:pathData="M42,20 L46,30 L54,22 L62,30 L66,20 L64,36 L44,36 Z" />
+</vector>

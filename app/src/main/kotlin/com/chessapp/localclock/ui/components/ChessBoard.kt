@@ -1,0 +1,137 @@
+package com.chessapp.localclock.ui.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color as UiColor
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
+import com.chessapp.engine.Color as EngineColor
+import com.chessapp.engine.GameStatus
+import com.chessapp.engine.Piece
+import com.chessapp.engine.Square
+import com.chessapp.localclock.ui.theme.BoardCheck
+import com.chessapp.localclock.ui.theme.BoardDarkSquare
+import com.chessapp.localclock.ui.theme.BoardLastMove
+import com.chessapp.localclock.ui.theme.BoardLegalTarget
+import com.chessapp.localclock.ui.theme.BoardLightSquare
+import com.chessapp.localclock.ui.theme.BoardSelected
+import com.chessapp.localclock.viewmodel.GameUiState
+
+/**
+ * Renders the 8x8 board from the perspective of the side to move when [GameUiState.flipBoardEachTurn]
+ * is enabled, which suits pass-and-play local multiplayer (each player sees "their" side at the bottom).
+ */
+@Composable
+fun ChessBoard(
+    uiState: GameUiState,
+    onSquareTapped: (Square) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val pos = uiState.position
+    val flipped = uiState.flipBoardEachTurn && pos.sideToMove == EngineColor.BLACK
+    val legalTargets = remember(uiState.selectedSquare, pos) {
+        uiState.legalMovesForSelected.map { it.to }.toSet()
+    }
+    val kingInCheckSquare = if (uiState.status == GameStatus.CHECK || uiState.status == GameStatus.CHECKMATE) {
+        pos.board.findKing(pos.sideToMove)
+    } else null
+
+    BoxWithConstraints(modifier = modifier.aspectRatio(1f)) {
+        val squareSize = maxWidth / 8
+        Column {
+            for (displayRow in 0..7) {
+                Row {
+                    for (displayCol in 0..7) {
+                        val file = if (flipped) 7 - displayCol else displayCol
+                        val rank = if (flipped) displayRow else 7 - displayRow
+                        val square = Square(file, rank)
+                        val piece = pos.board.pieceAt(square)
+
+                        SquareCell(
+                            size = squareSize,
+                            isLight = (file + rank) % 2 == 1,
+                            piece = piece,
+                            isSelected = uiState.selectedSquare == square,
+                            isLegalTarget = square in legalTargets,
+                            isLastMove = uiState.lastMove?.let { it.from == square || it.to == square } == true,
+                            isCheck = square == kingInCheckSquare,
+                            onClick = { onSquareTapped(square) }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SquareCell(
+    size: Dp,
+    isLight: Boolean,
+    piece: Piece?,
+    isSelected: Boolean,
+    isLegalTarget: Boolean,
+    isLastMove: Boolean,
+    isCheck: Boolean,
+    onClick: () -> Unit
+) {
+    val baseColor = if (isLight) BoardLightSquare else BoardDarkSquare
+    Box(
+        modifier = Modifier
+            .size(size)
+            .background(baseColor)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        if (isLastMove) {
+            Box(Modifier.fillMaxSize().background(BoardLastMove.copy(alpha = 0.45f)))
+        }
+        if (isCheck) {
+            Box(Modifier.fillMaxSize().background(BoardCheck.copy(alpha = 0.55f)))
+        }
+        if (isSelected) {
+            Box(Modifier.fillMaxSize().background(BoardSelected.copy(alpha = 0.55f)))
+        }
+        if (isLegalTarget) {
+            if (piece == null) {
+                Box(
+                    Modifier
+                        .size(size * 0.32f)
+                        .clip(CircleShape)
+                        .background(BoardLegalTarget.copy(alpha = 0.75f))
+                )
+            } else {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(size * 0.06f)
+                        .border(width = size * 0.06f, color = BoardLegalTarget.copy(alpha = 0.85f), shape = CircleShape)
+                )
+            }
+        }
+        piece?.let {
+            val density = LocalDensity.current
+            Text(
+                text = pieceGlyph(it),
+                fontSize = with(density) { (size.toPx() * 0.72f).toSp() },
+                color = if (it.color == EngineColor.WHITE) UiColor(0xFFFAFAFA) else UiColor(0xFF141414)
+            )
+        }
+    }
+}
