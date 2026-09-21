@@ -20,7 +20,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color as UiColor
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import com.chessapp.engine.Color as EngineColor
 import com.chessapp.engine.GameStatus
@@ -128,12 +130,33 @@ private fun SquareCell(
         }
         piece?.let {
             val density = LocalDensity.current
-            Text(
-                text = pieceGlyph(it),
-                fontSize = with(density) { (size.toPx() * 0.72f).toSp() },
-                color = if (it.color == EngineColor.WHITE) UiColor(0xFFFAFAFA) else UiColor(0xFF141414),
-                modifier = if (it.color == EngineColor.BLACK) Modifier.rotate(180f) else Modifier
-            )
+            val (fontSizeSp, outlineWidthPx) = with(density) {
+                val fontSizePx = size.toPx() * 0.72f
+                fontSizePx.toSp() to fontSizePx * 0.09f
+            }
+            if (it.color == EngineColor.WHITE) {
+                // Layer a black stroke behind a white fill so white pieces read clearly on light squares.
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = pieceGlyph(it),
+                        fontSize = fontSizeSp,
+                        color = UiColor.Black,
+                        style = TextStyle(drawStyle = Stroke(width = outlineWidthPx))
+                    )
+                    Text(
+                        text = pieceGlyph(it),
+                        fontSize = fontSizeSp,
+                        color = UiColor.White
+                    )
+                }
+            } else {
+                Text(
+                    text = pieceGlyph(it),
+                    fontSize = fontSizeSp,
+                    color = UiColor(0xFF141414),
+                    modifier = Modifier.rotate(180f)
+                )
+            }
         }
     }
 }
