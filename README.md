@@ -1,7 +1,9 @@
 # Local Chess Clock
 
-A local (pass-and-play) two-player chess app for Android, with an **optional** chess
-clock: pick a time control and increment, or play with unlimited time.
+A local (pass-and-play) two-player chess app for Android, built primarily for a
+large ~2400×2200 tablet-class display lying flat on a table between two
+players, with an **optional** chess clock: pick a time control and increment,
+or play with unlimited time.
 
 ## Features
 
@@ -21,7 +23,17 @@ clock: pick a time control and increment, or play with unlimited time.
   itself never flips. Instead, every piece rotates 180° as a group each
   turn, so whoever is about to move sees the whole board, including the
   opponent's pieces, facing them the right way up.
-- Captured-piece tray and move list for both players.
+- Each player's name, clock and captured-piece tray sit in a bar at their own
+  end of the board (Black's above, White's below), rotated to face their
+  seat. Unlike the pieces, that rotation is fixed per seat, not per turn —
+  Black's bar never flips back and forth mid-game.
+- Landscape, two-pane tablet layout: the board pane grows to fill all
+  available height so the board is always as large as the screen allows; a
+  side panel holds the (auto-scrolling) move list and the Resign / New setup
+  controls, so they never compete with the board for space.
+- A restrained, mostly-monochrome color scheme — warm-neutral board squares,
+  one ink accent for interactive/active state, and a single muted red
+  reserved for check — instead of a busy multi-color highlight palette.
 - Resign, rematch (same time control), and "new setup" to change the clock.
 
 ## Project layout
@@ -44,7 +56,8 @@ without touching the Android toolchain at all.
 
 Open the project root in Android Studio (Jellyfish/Koala or newer) and let it
 sync — it targets `compileSdk 34` / `minSdk 26` and uses AGP 8.5.2 with
-Kotlin 2.0.21.
+Kotlin 2.0.21. The activity is locked to landscape and declared resizeable /
+large-screen-friendly for its primary ~2400×2200 tablet target.
 
 From the command line:
 
@@ -81,7 +94,7 @@ app/
     viewmodel/GameViewModel.kt, GameUiState.kt
     ui/screens/SetupScreen.kt, GameScreen.kt
     ui/components/ChessBoard.kt, ClockDisplay.kt, CapturedPiecesRow.kt,
-                  PromotionDialog.kt, GameOverDialog.kt, MoveHistoryRow.kt,
+                  PromotionDialog.kt, GameOverDialog.kt, MoveHistoryList.kt,
                   PieceGlyph.kt
     ui/theme/Theme.kt
 ```

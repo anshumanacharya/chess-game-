@@ -135,7 +135,7 @@ private fun SquareCell(
         piece?.let {
             val density = LocalDensity.current
             val (fontSizeSp, outlineWidthPx) = with(density) {
-                val fontSizePx = size.toPx() * 0.72f
+                val fontSizePx = size.toPx() * 0.86f
                 fontSizePx.toSp() to fontSizePx * 0.09f
             }
             // The Unicode "white piece" glyphs (♔♕♖…) are hollow outlines with almost no

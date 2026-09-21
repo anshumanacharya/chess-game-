@@ -7,24 +7,29 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-val BoardLightSquare = Color(0xFFEDD6B0)
-val BoardDarkSquare = Color(0xFFB58863)
-val BoardSelected = Color(0xFF7FB2E5)
-val BoardLastMove = Color(0xFFF6F669)
-val BoardLegalTarget = Color(0xFF6FCF97)
-val BoardCheck = Color(0xFFE05252)
+// A restrained, mostly-monochrome palette: warm neutrals for the board and app chrome,
+// one ink accent for interactive/active state, and a single muted red reserved for check.
+val BoardLightSquare = Color(0xFFEDEBE6)
+val BoardDarkSquare = Color(0xFF8A8478)
+val AccentInk = Color(0xFF3A4A5A)
+val BoardSelected = AccentInk
+val BoardLegalTarget = Color(0xFF7C8A72)
+val BoardLastMove = Color(0xFFC9A66B)
+val BoardCheck = Color(0xFFB3453D)
 
 private val DarkColors = darkColorScheme(
-    primary = Color(0xFF8AB4F8),
-    secondary = Color(0xFFB58863),
-    background = Color(0xFF121212),
-    surface = Color(0xFF1E1E1E)
+    primary = Color(0xFF9FB0BE),
+    onPrimary = Color(0xFF1B1B1B),
+    secondary = BoardDarkSquare,
+    background = Color(0xFF17181A),
+    surface = Color(0xFF201F1D)
 )
 
 private val LightColors = lightColorScheme(
-    primary = Color(0xFF3E6FA8),
-    secondary = Color(0xFFB58863),
-    background = Color(0xFFFAF7F2),
+    primary = AccentInk,
+    onPrimary = Color(0xFFFFFFFF),
+    secondary = BoardDarkSquare,
+    background = Color(0xFFF7F6F3),
     surface = Color(0xFFFFFFFF)
 )
 

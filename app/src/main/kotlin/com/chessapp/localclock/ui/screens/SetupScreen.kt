@@ -1,13 +1,16 @@
 package com.chessapp.localclock.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -48,9 +51,11 @@ fun SetupScreen(
     var customMinutes by remember { mutableIntStateOf(15) }
     var customIncrement by remember { mutableIntStateOf(0) }
 
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .widthIn(max = 560.dp)
+            .fillMaxHeight()
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -146,6 +151,7 @@ fun SetupScreen(
         ) {
             Text("Start game", style = MaterialTheme.typography.titleMedium)
         }
+    }
     }
 }
 
