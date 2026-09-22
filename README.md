@@ -1,7 +1,7 @@
 # Local Chess
 
-A local, two-player chess app for Android with an optional chess clock. Built
-for a large tablet display, lying flat on a table between both players.
+A Chess app for Android with chess clock. Supports local 2 player over-the-
+board games and single player vs bot.
 
 **Try it in a browser:** https://anshumanacharya.github.io/chess-game-/
 (a JS build of the same rules engine, for quick testing — the Android app is
@@ -21,7 +21,6 @@ the real target.)
 - Optional single-player mode against a built-in bot (a rough ~1000 Elo
   design target, not a calibrated rating) — when playing as Black, the board
   flips so your own pieces are always at the bottom
-- A minimalist, mostly-monochrome color scheme
 
 ## Project layout
 
