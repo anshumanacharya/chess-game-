@@ -257,6 +257,18 @@ button {
   min-height: 18px;
 }
 
+/* The captured pieces sit on a board-light swatch (like they would on the board itself) rather
+   than the page background: Black's pieces all but disappear against the dark-theme page. */
+.captured-pieces {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+  padding: 2px 4px;
+  border-radius: 6px;
+  background: var(--board-light);
+}
+
 .captured-row .piece-glyph {
   width: 20px;
   height: 20px;

@@ -513,9 +513,13 @@
     var theirCaptures = game.capturedPieces(color); // pieces the opponent has captured from them
 
     var row = el("div", "captured-row");
-    ownCaptures.forEach(function (type) {
-      row.appendChild(pieceImage(type, opponent, "piece-glyph"));
-    });
+    if (ownCaptures.length > 0) {
+      var pieces = el("span", "captured-pieces");
+      ownCaptures.forEach(function (type) {
+        pieces.appendChild(pieceImage(type, opponent, "piece-glyph"));
+      });
+      row.appendChild(pieces);
+    }
     var advantage = materialValue(ownCaptures) - materialValue(theirCaptures);
     if (advantage > 0) {
       row.appendChild(el("span", "material-advantage", "+" + advantage));
