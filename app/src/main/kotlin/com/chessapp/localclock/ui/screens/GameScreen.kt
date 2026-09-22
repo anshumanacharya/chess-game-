@@ -72,20 +72,25 @@ fun GameScreen(
             .padding(24.dp),
         horizontalArrangement = Arrangement.spacedBy(24.dp)
     ) {
+        // Whichever color sits "near" the human (bottom of the board) gets the bottom bar too,
+        // matching the board flip in ChessBoard. In pass-and-play there's no single human seat,
+        // so this defaults to the traditional Black-top/White-bottom layout; against the bot,
+        // only the top bar (wherever the opponent ends up) rotates — there's just one real seat.
+        val humanIsBlack = uiState.humanColor == Color.BLACK
+        val topColor = if (humanIsBlack) Color.WHITE else Color.BLACK
+        val bottomColor = if (humanIsBlack) Color.BLACK else Color.WHITE
+        val topRotationDegrees = if (uiState.botColor == null) 180f else 0f
+
         Column(
             modifier = Modifier
                 .weight(3f)
                 .fillMaxHeight(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Black sits opposite White at the table, so Black's bar is rotated 180° to face
-            // them; this rotation is fixed to their seat and does not change with whose turn
-            // it is (unlike the board's pieces, which do rotate each turn).
             PlayerBar(
-                name = "Black",
-                playerColor = Color.BLACK,
+                playerColor = topColor,
                 uiState = uiState,
-                facingRotationDegrees = 180f
+                facingRotationDegrees = topRotationDegrees
             )
 
             Spacer(Modifier.height(16.dp))
@@ -121,8 +126,7 @@ fun GameScreen(
             Spacer(Modifier.height(8.dp))
 
             PlayerBar(
-                name = "White",
-                playerColor = Color.WHITE,
+                playerColor = bottomColor,
                 uiState = uiState,
                 facingRotationDegrees = 0f
             )
@@ -230,20 +234,22 @@ fun GameScreen(
 }
 
 /**
- * One player's name, clock and captured pieces, positioned at their end of the board and
- * rotated by [facingRotationDegrees] so the whole bar reads right-side-up from their seat.
- * That rotation is fixed per player (Black's seat is always "up" from the app's own frame,
- * White's is always "down") and never changes with whose turn it is.
+ * One player's clock and captured pieces (with the classic +N material-advantage count),
+ * positioned at their end of the board and rotated by [facingRotationDegrees] so the whole bar
+ * reads right-side-up from their seat. No name label: position and the captured pieces' own
+ * colors already say whose bar this is.
  */
 @Composable
 private fun PlayerBar(
-    name: String,
     playerColor: Color,
     uiState: GameUiState,
     facingRotationDegrees: Float,
     modifier: Modifier = Modifier
 ) {
     val opponentColor = if (playerColor == Color.WHITE) Color.BLACK else Color.WHITE
+    val ownCaptures = uiState.capturedPieces(opponentColor) // pieces THIS player has captured
+    val theirCaptures = uiState.capturedPieces(playerColor) // pieces captured from this player
+    val advantage = materialValue(ownCaptures) - materialValue(theirCaptures)
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -251,12 +257,8 @@ private fun PlayerBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column {
-            Text(name, style = MaterialTheme.typography.labelLarge)
-            CapturedPiecesRow(captured = uiState.capturedPieces(opponentColor), color = opponentColor)
-        }
+        CapturedPiecesRow(captured = ownCaptures, color = opponentColor, advantage = advantage)
         ClockDisplay(
-            label = name,
             millisRemaining = uiState.clock.remaining(playerColor),
             isActive = uiState.clock.activeColor == playerColor && !uiState.isGameOver,
             isUnlimited = uiState.clock.isUnlimited,

@@ -4,11 +4,14 @@
   --surface-variant: #EDEBE6;
   --text: #1B1B1F;
   --text-muted: #6B6B6F;
-  --board-light: #EDEBE6;
-  --board-dark: #8A8478;
+  /* lichess.org's default ("brown") board theme. The green legal-move dot it replaced had poor
+     contrast on the dark squares; this dark, near-black tone (also lichess's own choice) reads
+     clearly on both. */
+  --board-light: #F0D9B5;
+  --board-dark: #B58863;
   --accent-ink: #3A4A5A;
   --on-accent-ink: #FFFFFF;
-  --legal-target: #7C8A72;
+  --legal-target: #141E0A;
   --last-move: #C9A66B;
   --check: #B3453D;
   --on-check: #FFFFFF;

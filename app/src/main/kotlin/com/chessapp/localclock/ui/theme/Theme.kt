@@ -7,13 +7,14 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
-// A restrained, mostly-monochrome palette: warm neutrals for the board and app chrome,
-// one ink accent for interactive/active state, and a single muted red reserved for check.
-val BoardLightSquare = Color(0xFFEDEBE6)
-val BoardDarkSquare = Color(0xFF8A8478)
+// Board colors match lichess.org's default ("brown") theme — the green legal-move dot it
+// replaced had poor contrast on the dark squares; this dark, near-black tone (also lichess's
+// own choice) reads clearly on both.
+val BoardLightSquare = Color(0xFFF0D9B5)
+val BoardDarkSquare = Color(0xFFB58863)
 val AccentInk = Color(0xFF3A4A5A)
 val BoardSelected = AccentInk
-val BoardLegalTarget = Color(0xFF7C8A72)
+val BoardLegalTarget = Color(0xFF141E0A)
 val BoardLastMove = Color(0xFFC9A66B)
 val BoardCheck = Color(0xFFB3453D)
 

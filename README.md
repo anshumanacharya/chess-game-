@@ -61,5 +61,5 @@ Pushing to `main` auto-deploys the web build via GitHub Actions.
 
 ## Credits
 
-The web build's piece artwork is the "Cburnett" set by Colin M.L. Burnett
-(CC BY-SA 3.0) — see `web/pieces/README.md`.
+The piece artwork (both the web build and the Android app) is the "Cburnett" set
+by Colin M.L. Burnett (CC BY-SA 3.0) — see `web/pieces/README.md`.

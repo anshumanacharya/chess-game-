@@ -26,9 +26,10 @@ fun formatClockTime(millis: Long): String {
     }
 }
 
+/** No color label: position (top/bottom, matching the board orientation) and the captured
+ *  pieces shown alongside it already say whose clock this is. */
 @Composable
 fun ClockDisplay(
-    label: String,
     millisRemaining: Long,
     isActive: Boolean,
     isUnlimited: Boolean,
@@ -50,7 +51,6 @@ fun ClockDisplay(
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(label, style = MaterialTheme.typography.labelMedium)
             Text(
                 text = if (isUnlimited) "∞" else formatClockTime(millisRemaining),
                 style = MaterialTheme.typography.headlineMedium,

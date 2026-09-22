@@ -1,5 +1,6 @@
 package com.chessapp.localclock.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -12,17 +13,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Color as UiColor
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import com.chessapp.engine.Color as EngineColor
 import com.chessapp.engine.GameStatus
@@ -37,13 +34,14 @@ import com.chessapp.localclock.ui.theme.BoardSelected
 import com.chessapp.localclock.viewmodel.GameUiState
 
 /**
- * Renders the 8x8 board in a fixed orientation (White at the bottom, Black at the top) so
- * the device can lie flat on a table between the two players without flipping every move.
+ * Renders the 8x8 board. In pass-and-play it's in a fixed orientation (White at the bottom,
+ * Black at the top) so the device can lie flat on a table between the two players, with the
+ * pieces (every piece, both colors) rotating 180° together whenever it's Black's turn so
+ * whoever is about to move reads the whole board facing them.
  *
- * In pass-and-play, the piece glyphs (every piece, both colors) rotate 180° together whenever
- * it's Black's turn, so whoever is about to move sees the whole board facing them. Against the
- * bot there's only one human, sitting in one seat the whole game, so the pieces instead stay
- * fixed to face that seat regardless of whose turn it is.
+ * Against the bot there's only one human, sitting in one seat the whole game: playing as Black
+ * permanently flips the board (like flipping the board on lichess/chess.com) so their own pieces
+ * sit at the bottom, near them, instead of just rotating the piece artwork in place.
  */
 @Composable
 fun ChessBoard(
@@ -59,8 +57,9 @@ fun ChessBoard(
         pos.board.findKing(pos.sideToMove)
     } else null
     val fixedSeat = uiState.humanColor
+    val boardFlipped = fixedSeat == EngineColor.BLACK
     val pieceRotationDegrees = when {
-        fixedSeat != null -> if (fixedSeat == EngineColor.BLACK) 180f else 0f
+        fixedSeat != null -> 0f
         pos.sideToMove == EngineColor.BLACK -> 180f
         else -> 0f
     }
@@ -71,8 +70,8 @@ fun ChessBoard(
             for (displayRow in 0..7) {
                 Row {
                     for (displayCol in 0..7) {
-                        val file = displayCol
-                        val rank = 7 - displayRow
+                        val file = if (boardFlipped) 7 - displayCol else displayCol
+                        val rank = if (boardFlipped) displayRow else 7 - displayRow
                         val square = Square(file, rank)
                         val piece = pos.board.pieceAt(square)
 
@@ -141,37 +140,13 @@ private fun SquareCell(
             }
         }
         piece?.let {
-            val density = LocalDensity.current
-            val (fontSizeSp, outlineWidthPx) = with(density) {
-                val fontSizePx = size.toPx() * 0.86f
-                fontSizePx.toSp() to fontSizePx * 0.09f
-            }
-            // The Unicode "white piece" glyphs (♔♕♖…) are hollow outlines with almost no
-            // fillable body, so a white-fill/black-stroke treatment on them just looks thin
-            // and mostly black. Use the solid "black piece" glyph shapes for both colors here
-            // and let color/stroke do the coloring instead.
-            val glyph = pieceGlyph(it.type, EngineColor.BLACK)
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.rotate(pieceRotationDegrees)) {
-                if (it.color == EngineColor.WHITE) {
-                    Text(
-                        text = glyph,
-                        fontSize = fontSizeSp,
-                        color = UiColor.Black,
-                        style = TextStyle(drawStyle = Stroke(width = outlineWidthPx))
-                    )
-                    Text(
-                        text = glyph,
-                        fontSize = fontSizeSp,
-                        color = UiColor.White
-                    )
-                } else {
-                    Text(
-                        text = glyph,
-                        fontSize = fontSizeSp,
-                        color = UiColor(0xFF141414)
-                    )
-                }
-            }
+            Image(
+                painter = painterResource(id = pieceIconRes(it)),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxSize(0.86f)
+                    .rotate(pieceRotationDegrees)
+            )
         }
     }
 }
