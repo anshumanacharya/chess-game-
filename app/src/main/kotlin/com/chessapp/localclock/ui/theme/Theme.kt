@@ -15,6 +15,8 @@ val BoardDarkSquare = Color(0xFFB58863)
 val AccentInk = Color(0xFF3A4A5A)
 val BoardSelected = AccentInk
 val BoardLegalTarget = Color(0xFF141E0A)
+// Red frame around a square holding a capturable enemy piece (a dot would be hidden by the piece).
+val BoardCaptureTarget = Color(0xFFD13B2F)
 val BoardLastMove = Color(0xFFC9A66B)
 val BoardCheck = Color(0xFFB3453D)
 

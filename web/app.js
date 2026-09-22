@@ -608,7 +608,7 @@
 
     if (isLegalTarget) {
       if (piece) {
-        square.appendChild(el("div", "legal-ring"));
+        square.appendChild(el("div", "capture-target"));
       } else {
         square.appendChild(el("div", "legal-dot"));
       }
