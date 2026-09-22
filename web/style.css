@@ -399,6 +399,16 @@ button {
   cursor: default;
 }
 
+.button-row {
+  display: flex;
+  gap: 12px;
+}
+
+.button-row .outlined-button {
+  width: auto;
+  flex: 1;
+}
+
 /* ---------- Overlays ---------- */
 
 .overlay-backdrop {

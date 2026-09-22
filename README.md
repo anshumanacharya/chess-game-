@@ -17,6 +17,7 @@ the real target.)
   rotating 180° each turn so whoever's moving reads the board right-side up
 - Each player's clock and captured pieces sit in a bar at their end of the
   board, rotated to face them
+- Resign, offer/accept a draw, or start a rematch
 - A minimalist, mostly-monochrome color scheme
 
 ## Project layout

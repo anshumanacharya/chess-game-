@@ -19,7 +19,8 @@ enum class GameOverReason {
     WHITE_TIME_OUT,
     BLACK_TIME_OUT,
     WHITE_RESIGNED,
-    BLACK_RESIGNED
+    BLACK_RESIGNED,
+    DRAW_AGREED
 }
 
 /** A pawn reached the last rank: user must pick which piece it becomes before the move is applied. */

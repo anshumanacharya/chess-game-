@@ -51,6 +51,7 @@ fun GameScreen(
 ) {
     val uiState = viewModel.uiState
     var showResignConfirm by remember { mutableStateOf(false) }
+    var showDrawOfferConfirm by remember { mutableStateOf(false) }
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -129,12 +130,24 @@ fun GameScreen(
             )
 
             Spacer(Modifier.height(16.dp))
-            OutlinedButton(
-                onClick = { showResignConfirm = true },
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !uiState.isGameOver
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text("Resign")
+                OutlinedButton(
+                    onClick = { showDrawOfferConfirm = true },
+                    modifier = Modifier.weight(1f),
+                    enabled = !uiState.isGameOver
+                ) {
+                    Text("Offer draw")
+                }
+                OutlinedButton(
+                    onClick = { showResignConfirm = true },
+                    modifier = Modifier.weight(1f),
+                    enabled = !uiState.isGameOver
+                ) {
+                    Text("Resign")
+                }
             }
             Spacer(Modifier.height(12.dp))
             OutlinedButton(onClick = onBackToSetup, modifier = Modifier.fillMaxWidth()) {
@@ -173,6 +186,27 @@ fun GameScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showResignConfirm = false }) { Text("Cancel") }
+            }
+        )
+    }
+
+    if (showDrawOfferConfirm) {
+        val offeringColor = uiState.position.sideToMove
+        val decidingColor = if (offeringColor == Color.WHITE) Color.BLACK else Color.WHITE
+        val offeringName = if (offeringColor == Color.WHITE) "White" else "Black"
+        val decidingName = if (decidingColor == Color.WHITE) "White" else "Black"
+        AlertDialog(
+            onDismissRequest = { showDrawOfferConfirm = false },
+            title = { Text("Draw offered") },
+            text = { Text("$offeringName offers a draw. $decidingName, do you accept?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDrawOfferConfirm = false
+                    viewModel.agreeToDraw()
+                }) { Text("Accept") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDrawOfferConfirm = false }) { Text("Decline") }
             }
         )
     }

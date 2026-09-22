@@ -30,6 +30,7 @@ fun GameOverDialog(
         GameOverReason.BLACK_TIME_OUT -> "Black ran out of time"
         GameOverReason.WHITE_RESIGNED -> "White resigned"
         GameOverReason.BLACK_RESIGNED -> "Black resigned"
+        GameOverReason.DRAW_AGREED -> "Draw agreed"
     }
     AlertDialog(
         onDismissRequest = {},

@@ -156,6 +156,10 @@ class GameViewModel @JvmOverloads constructor(
         endGame(if (color == Color.WHITE) GameOverReason.WHITE_RESIGNED else GameOverReason.BLACK_RESIGNED)
     }
 
+    fun agreeToDraw() {
+        endGame(GameOverReason.DRAW_AGREED)
+    }
+
     private fun endGame(reason: GameOverReason) {
         tickerJob?.cancel()
         uiState = uiState.copy(gameOverReason = reason, selectedSquare = null, pendingPromotion = null)

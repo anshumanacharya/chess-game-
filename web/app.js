@@ -35,7 +35,8 @@
     white_time_out: "White ran out of time",
     black_time_out: "Black ran out of time",
     white_resigned: "White resigned",
-    black_resigned: "Black resigned"
+    black_resigned: "Black resigned",
+    draw_agreed: "Draw agreed"
   };
 
   // ---- app state ----
@@ -46,6 +47,7 @@
   var pendingPromotion = null; // { fromFile, fromRank, toFile, toRank, options }
   var gameOverReason = null; // string | null
   var showResignConfirm = false;
+  var showDrawOfferConfirm = false;
   var tickHandle = null;
   var lastTickAt = 0;
   var lastConfig = null;
@@ -69,6 +71,7 @@
       if (pendingPromotion) root.appendChild(renderPromotionOverlay());
       else if (gameOverReason) root.appendChild(renderGameOverOverlay());
       else if (showResignConfirm) root.appendChild(renderResignOverlay());
+      else if (showDrawOfferConfirm) root.appendChild(renderDrawOfferOverlay());
     }
   }
 
@@ -301,6 +304,10 @@
     endGame(color === "white" ? "white_resigned" : "black_resigned");
   }
 
+  function agreeToDraw() {
+    endGame("draw_agreed");
+  }
+
   function backToSetup() {
     stopTicker();
     screen = "setup";
@@ -485,13 +492,25 @@
     });
     panel.appendChild(movesList);
 
+    var buttonRow = el("div", "button-row");
+
+    var drawButton = el("button", "outlined-button", "Offer draw");
+    drawButton.disabled = !!gameOverReason;
+    drawButton.addEventListener("click", function () {
+      showDrawOfferConfirm = true;
+      render();
+    });
+    buttonRow.appendChild(drawButton);
+
     var resignButton = el("button", "outlined-button", "Resign");
     resignButton.disabled = !!gameOverReason;
     resignButton.addEventListener("click", function () {
       showResignConfirm = true;
       render();
     });
-    panel.appendChild(resignButton);
+    buttonRow.appendChild(resignButton);
+
+    panel.appendChild(buttonRow);
 
     var newSetupButton = el("button", "outlined-button", "New setup");
     newSetupButton.addEventListener("click", backToSetup);
@@ -571,6 +590,33 @@
     });
     actions.appendChild(confirmButton);
     actions.appendChild(cancelButton);
+    card.appendChild(actions);
+    backdrop.appendChild(card);
+    return backdrop;
+  }
+
+  function renderDrawOfferOverlay() {
+    var backdrop = el("div", "overlay-backdrop");
+    var card = el("div", "overlay-card");
+    var offeringColor = game.sideToMove();
+    var decidingColor = offeringColor === "white" ? "black" : "white";
+    var offeringName = offeringColor === "white" ? "White" : "Black";
+    var decidingName = decidingColor === "white" ? "White" : "Black";
+    card.appendChild(el("div", "overlay-title", "Draw offered"));
+    card.appendChild(el("div", "overlay-text", offeringName + " offers a draw. " + decidingName + ", do you accept?"));
+    var actions = el("div", "overlay-actions");
+    var acceptButton = el("button", "primary-button", "Accept");
+    acceptButton.addEventListener("click", function () {
+      showDrawOfferConfirm = false;
+      agreeToDraw();
+    });
+    var declineButton = el("button", "outlined-button", "Decline");
+    declineButton.addEventListener("click", function () {
+      showDrawOfferConfirm = false;
+      render();
+    });
+    actions.appendChild(acceptButton);
+    actions.appendChild(declineButton);
     card.appendChild(actions);
     backdrop.appendChild(card);
     return backdrop;
