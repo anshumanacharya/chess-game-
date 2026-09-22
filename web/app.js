@@ -473,7 +473,14 @@
   function renderClockPill(color) {
     var isActive = clock.activeColor() === color && !gameOverReason;
     var isFlagged = clock.flaggedColor() === color;
-    var pill = el("div", "clock-pill" + (isFlagged ? " flagged" : isActive ? " active" : ""));
+    // In pass-and-play, Black's clock is rotated to face Black's seat (opposite White's), same
+    // as the board pieces and Black's name bar — matching how a real board sits between two
+    // players. Against the bot there's only one human seat, so neither clock rotates.
+    var facesOpponentSeat = color === "black" && !currentBotColor;
+    var classes = "clock-pill" +
+      (isFlagged ? " flagged" : isActive ? " active" : "") +
+      (facesOpponentSeat ? " facing-away" : "");
+    var pill = el("div", classes);
     pill.id = "clock-pill-" + color;
     pill.appendChild(el("div", "clock-label", color.toUpperCase()));
     var timeEl = el("div", "clock-time", clock.isUnlimited() ? "∞" : formatClockTime(clock.remainingMillis(color)));
@@ -518,11 +525,16 @@
     var grid = el("div", "board-grid");
 
     var sideToMove = game.sideToMove();
-    // Pass-and-play: pieces rotate with whoever's turn it is, so both players share one device.
-    // Against the bot there's only one human in one seat the whole game, so pieces stay fixed
-    // to face that seat instead of flipping on the bot's turns.
     var fixedSeat = humanColor();
-    var pieceRotated = fixedSeat ? fixedSeat === "black" : sideToMove === "black";
+    // Against the bot as Black, the whole board is permanently flipped (like flipping the board
+    // on lichess/chess.com) so Black's own pieces sit at the bottom, near the human — pieces are
+    // drawn upright either way, only their screen position changes, so no per-piece rotation is
+    // needed here (unlike pass-and-play below).
+    var boardFlipped = fixedSeat === "black";
+    // Pass-and-play: pieces rotate with whoever's turn it is, so both players share one device
+    // without moving it. Against the bot there's only one human in one seat the whole game, so
+    // pieces are never individually rotated — the board orientation above already handles it.
+    var pieceRotated = fixedSeat ? false : sideToMove === "black";
     var status = game.status();
     var kingInCheck = (status === "check" || status === "checkmate") ? game.sideToMoveKingSquareIfInCheck() : null;
     var lastMove = game.lastMove();
@@ -531,8 +543,8 @@
 
     for (var displayRow = 0; displayRow < 8; displayRow++) {
       for (var displayCol = 0; displayCol < 8; displayCol++) {
-        var file = displayCol;
-        var rank = 7 - displayRow;
+        var file = boardFlipped ? 7 - displayCol : displayCol;
+        var rank = boardFlipped ? displayRow : 7 - displayRow;
         grid.appendChild(renderSquare(file, rank, pieceRotated, kingInCheck, lastMove, legalTargets, squares));
       }
     }
