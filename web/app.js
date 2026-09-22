@@ -579,15 +579,17 @@
     return square;
   }
 
+  // Mirrors the board-pane's own top/bottom structure (opponent's bar, board, player's bar) so
+  // the side panel reads as the same kind of sandwich and is naturally the same height: Black's
+  // clock pinned to the top, White's pinned to the bottom, everything else scrolls in between.
   function renderSidePanel() {
     var panel = el("div", "side-panel");
 
-    var clocksRow = el("div", "side-clocks");
-    clocksRow.appendChild(renderClockPill("black"));
-    clocksRow.appendChild(renderClockPill("white"));
-    panel.appendChild(clocksRow);
+    panel.appendChild(renderClockPill("black"));
 
-    panel.appendChild(el("div", "moves-title", "Moves"));
+    var middle = el("div", "side-panel-middle");
+
+    middle.appendChild(el("div", "moves-title", "Moves"));
 
     var movesList = el("div", "moves-list");
     var history = moveHistoryPairs();
@@ -598,7 +600,7 @@
       row.appendChild(el("span", null, pair[1] || ""));
       movesList.appendChild(row);
     });
-    panel.appendChild(movesList);
+    middle.appendChild(movesList);
 
     var buttonRow = el("div", "button-row");
 
@@ -618,11 +620,15 @@
     });
     buttonRow.appendChild(resignButton);
 
-    panel.appendChild(buttonRow);
+    middle.appendChild(buttonRow);
 
     var newSetupButton = el("button", "outlined-button", "New setup");
     newSetupButton.addEventListener("click", backToSetup);
-    panel.appendChild(newSetupButton);
+    middle.appendChild(newSetupButton);
+
+    panel.appendChild(middle);
+
+    panel.appendChild(renderClockPill("white"));
 
     return panel;
   }

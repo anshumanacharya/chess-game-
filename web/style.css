@@ -187,15 +187,19 @@ button {
   flex-direction: column;
   gap: 14px;
   min-width: 220px;
+  /* Without this, a flex item that's itself a flex container won't shrink below its content's
+     natural height, so a long moves list would grow the whole panel taller than the board
+     instead of scrolling inside .moves-list as intended (.board-pane sets this for the same
+     reason). This is what keeps the panel's height locked to the board's at all times. */
+  min-height: 0;
 }
 
-.side-clocks {
-  display: flex;
-  gap: 12px;
-}
-
-.side-clocks .clock-pill {
+.side-panel-middle {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
 }
 
 .player-bar {
