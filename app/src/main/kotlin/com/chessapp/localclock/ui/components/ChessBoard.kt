@@ -39,8 +39,11 @@ import com.chessapp.localclock.viewmodel.GameUiState
 /**
  * Renders the 8x8 board in a fixed orientation (White at the bottom, Black at the top) so
  * the device can lie flat on a table between the two players without flipping every move.
- * The piece glyphs (every piece, both colors) rotate 180° together whenever it's Black's turn,
- * so whoever is about to move sees the whole board — including the opponent's pieces — facing them.
+ *
+ * In pass-and-play, the piece glyphs (every piece, both colors) rotate 180° together whenever
+ * it's Black's turn, so whoever is about to move sees the whole board facing them. Against the
+ * bot there's only one human, sitting in one seat the whole game, so the pieces instead stay
+ * fixed to face that seat regardless of whose turn it is.
  */
 @Composable
 fun ChessBoard(
@@ -55,7 +58,12 @@ fun ChessBoard(
     val kingInCheckSquare = if (uiState.status == GameStatus.CHECK || uiState.status == GameStatus.CHECKMATE) {
         pos.board.findKing(pos.sideToMove)
     } else null
-    val pieceRotationDegrees = if (pos.sideToMove == EngineColor.BLACK) 180f else 0f
+    val fixedSeat = uiState.humanColor
+    val pieceRotationDegrees = when {
+        fixedSeat != null -> if (fixedSeat == EngineColor.BLACK) 180f else 0f
+        pos.sideToMove == EngineColor.BLACK -> 180f
+        else -> 0f
+    }
 
     BoxWithConstraints(modifier = modifier.aspectRatio(1f)) {
         val squareSize = maxWidth / 8

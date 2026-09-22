@@ -514,7 +514,11 @@
     var grid = el("div", "board-grid");
 
     var sideToMove = game.sideToMove();
-    var pieceRotated = sideToMove === "black";
+    // Pass-and-play: pieces rotate with whoever's turn it is, so both players share one device.
+    // Against the bot there's only one human in one seat the whole game, so pieces stay fixed
+    // to face that seat instead of flipping on the bot's turns.
+    var fixedSeat = humanColor();
+    var pieceRotated = fixedSeat ? fixedSeat === "black" : sideToMove === "black";
     var status = game.status();
     var kingInCheck = (status === "check" || status === "checkmate") ? game.sideToMoveKingSquareIfInCheck() : null;
     var lastMove = game.lastMove();
