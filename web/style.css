@@ -189,6 +189,15 @@ button {
   min-width: 220px;
 }
 
+.side-clocks {
+  display: flex;
+  gap: 12px;
+}
+
+.side-clocks .clock-pill {
+  flex: 1;
+}
+
 .player-bar {
   width: 100%;
   display: flex;

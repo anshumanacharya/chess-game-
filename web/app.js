@@ -465,6 +465,12 @@
     info.appendChild(capturedRow);
     bar.appendChild(info);
 
+    return bar;
+  }
+
+  // Clocks live in the side panel (not next to the board) so they never get squeezed off-screen
+  // on a short viewport where the board-pane's own height is already tight.
+  function renderClockPill(color) {
     var isActive = clock.activeColor() === color && !gameOverReason;
     var isFlagged = clock.flaggedColor() === color;
     var pill = el("div", "clock-pill" + (isFlagged ? " flagged" : isActive ? " active" : ""));
@@ -473,9 +479,7 @@
     var timeEl = el("div", "clock-time", clock.isUnlimited() ? "∞" : formatClockTime(clock.remainingMillis(color)));
     timeEl.id = "clock-time-" + color;
     pill.appendChild(timeEl);
-    bar.appendChild(pill);
-
-    return bar;
+    return pill;
   }
 
   /** Cheap in-place update for a plain clock tick, so a full re-render (and its DOM teardown)
@@ -577,6 +581,12 @@
 
   function renderSidePanel() {
     var panel = el("div", "side-panel");
+
+    var clocksRow = el("div", "side-clocks");
+    clocksRow.appendChild(renderClockPill("black"));
+    clocksRow.appendChild(renderClockPill("white"));
+    panel.appendChild(clocksRow);
+
     panel.appendChild(el("div", "moves-title", "Moves"));
 
     var movesList = el("div", "moves-list");
