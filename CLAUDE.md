@@ -126,10 +126,16 @@ Completed this session:
 - Updated README credits to cover both platforms' artwork.
 - Pushed to `main` (commit `5efc0ee`); `deploy-pages.yml` ran and succeeded.
 
+Bot wiring (confirmed complete this session): `chess-bot` submodule has
+`ChessBot`/`Evaluator`/`TwoPlySearch`/`PieceValues`/`BotConfig` + unit tests,
+pulled in as a source dir (not a compiled dep) by both `app/` and
+`web-engine/`. Android: `SetupScreen` → `GameViewModel` →
+`bot/RemoteBotSource` (WebView, online-first with an offline fallback via
+`ConnectivityChecker`). Web: `JsApi.kt` exposes `setBot`/`hasBot`/
+`isBotTurn`/`playBotMove`, consumed by `app.js`'s `maybeTriggerBotMove`.
+The stale in-progress task list in the repo (Gradle scaffolding era) is
+outdated — bot integration is done on both platforms, not pending.
+
 Open items:
 - Android changes are unverified by an actual build/emulator run (sandbox
   has no Android SDK) — do a real on-device check next session.
-- Per the README/task list, single-player bot wiring
-  (`chess-engine`'s `ChessBot`, Android setup-screen integration, web
-  `JsApi`/`app.js` integration) was in progress in earlier sessions —
-  confirm current status before assuming it's finished.
