@@ -34,7 +34,11 @@ data class GameUiState(
     val gameOverReason: GameOverReason? = null,
     /** null means pass-and-play (both sides human); otherwise the color the bot plays. */
     val botColor: Color? = null,
-    val isBotThinking: Boolean = false
+    val isBotThinking: Boolean = false,
+    /** Whether the bot's most recent move came from the bundled offline copy rather than the
+     *  one hosted on GitHub Pages — because the device is offline, or the online one failed.
+     *  Meaningless (and unused) outside a vs-bot game. */
+    val lastBotMoveWasOffline: Boolean = false
 ) {
     // These read pure, already-committed board state to drive display (status text, highlighted
     // legal-move dots) rather than committing anything, so they call MoveGenerator directly

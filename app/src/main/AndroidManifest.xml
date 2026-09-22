@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Used only for the single-player bot: when online, the app runs the bot logic that's
+         live on GitHub Pages (in a hidden WebView) instead of the copy bundled at build time,
+         falling back to the bundled copy when there's no working internet connection. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <!-- Primary target is a large ~2400x2200 tablet-class display; the two-pane layout
          is built for landscape, and the app is left resizeable for other large screens. -->
     <supports-screens

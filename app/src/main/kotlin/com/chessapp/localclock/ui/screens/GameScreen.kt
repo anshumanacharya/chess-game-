@@ -108,6 +108,15 @@ fun GameScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            } else if (uiState.botColor != null && uiState.lastBotMoveWasOffline) {
+                // The bot normally runs the latest version hosted on GitHub Pages; this only
+                // shows when that wasn't reachable and it fell back to the copy bundled with
+                // this app instead.
+                Text(
+                    "Offline — using built-in bot",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
             Spacer(Modifier.height(8.dp))
 

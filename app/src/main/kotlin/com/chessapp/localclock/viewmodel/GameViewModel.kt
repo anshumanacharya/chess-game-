@@ -1,11 +1,11 @@
 package com.chessapp.localclock.viewmodel
 
+import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.chessapp.bot.ChessBot
 import com.chessapp.engine.ClockConfig
 import com.chessapp.engine.ClockState
 import com.chessapp.engine.Color
@@ -14,26 +14,38 @@ import com.chessapp.engine.Move
 import com.chessapp.engine.MoveGenerator
 import com.chessapp.engine.PieceType
 import com.chessapp.engine.Square
+import com.chessapp.localclock.bot.AndroidConnectivityChecker
+import com.chessapp.localclock.bot.BotMoveOrigin
+import com.chessapp.localclock.bot.BotStrategy
+import com.chessapp.localclock.bot.LocalBotSource
+import com.chessapp.localclock.bot.RemoteBotSource
 import com.chessapp.localclock.game.GameSource
 import com.chessapp.localclock.game.LocalGameSource
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /**
  * [gameSource] defaults to on-device pass-and-play but is swappable — a future online mode
  * (e.g. backed by Lichess's Board API) plugs in as another [GameSource] without this class or
- * the UI it drives needing to change. `@JvmOverloads` keeps the zero-arg constructor Compose's
- * `viewModel()` helper instantiates via reflection; a custom `ViewModelProvider.Factory` would
- * supply a different source later.
+ * the UI it drives needing to change. `@JvmOverloads` keeps the single-arg (Application-only)
+ * constructor Compose's `viewModel()` helper instantiates via reflection, the same way it already
+ * finds the default [AndroidViewModel] constructor shape; a custom `ViewModelProvider.Factory`
+ * would supply different sources later.
+ *
+ * [botStrategy] needs a [Context][android.content.Context] to run the bot's remote (WebView)
+ * source, which is why this is an [AndroidViewModel] rather than a plain `ViewModel`.
  */
 class GameViewModel @JvmOverloads constructor(
+    application: Application,
     private val gameSource: GameSource = LocalGameSource(),
-    private val bot: ChessBot = ChessBot()
-) : ViewModel() {
+    private val botStrategy: BotStrategy = BotStrategy(
+        local = LocalBotSource(),
+        remote = RemoteBotSource(application),
+        connectivityChecker = AndroidConnectivityChecker(application)
+    )
+) : AndroidViewModel(application) {
 
     var uiState by mutableStateOf(GameUiState())
         private set
@@ -163,10 +175,11 @@ class GameViewModel @JvmOverloads constructor(
     }
 
     /**
-     * If it's the bot's turn, picks its move on a background dispatcher (the search is cheap
-     * but still real CPU work) after a short delay so its reply doesn't feel instantaneous,
-     * then applies it exactly like a human move. Re-checks [GameUiState.isBotTurn] after the
-     * delay/search in case the game ended (e.g. the human resigned) while it was "thinking".
+     * If it's the bot's turn, picks its move (online: the bot hosted on GitHub Pages; offline
+     * or if that fails: the copy bundled with this app — see [BotStrategy]) after a short delay
+     * so its reply doesn't feel instantaneous, then applies it exactly like a human move.
+     * Re-checks [GameUiState.isBotTurn] after the delay/search in case the game ended (e.g. the
+     * human resigned) while it was "thinking".
      */
     private fun maybeTriggerBotMove() {
         if (!uiState.isBotTurn) return
@@ -175,10 +188,10 @@ class GameViewModel @JvmOverloads constructor(
         botMoveJob = viewModelScope.launch {
             delay(BOT_MOVE_DELAY_MS)
             val position = uiState.position
-            val move = withContext(Dispatchers.Default) { bot.chooseMove(position) }
+            val result = botStrategy.chooseMove(position)
             if (!uiState.isBotTurn || uiState.position !== position) return@launch
-            uiState = uiState.copy(isBotThinking = false)
-            if (move != null) applyMove(move)
+            uiState = uiState.copy(isBotThinking = false, lastBotMoveWasOffline = result.origin == BotMoveOrigin.LOCAL)
+            if (result.move != null) applyMove(result.move)
         }
     }
 
