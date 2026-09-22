@@ -14,17 +14,23 @@
     { label: "30 min", minutes: 30, increment: 0 }
   ];
 
-  // ︎ (variation selector-15) forces the text presentation of these glyphs rather than
-  // an emoji-style colored one. Without it, iOS Safari renders them as solid black regardless
-  // of any CSS color/-webkit-text-fill-color, so "white" pieces come out looking black too.
-  var PIECE_GLYPH = {
-    king: "♚︎",
-    queen: "♛︎",
-    rook: "♜︎",
-    bishop: "♝︎",
-    knight: "♞︎",
-    pawn: "♟︎"
-  };
+  // Real piece artwork (the Cburnett set — pieces/README.md has the credit/license) instead of
+  // Unicode glyphs: clearer at a glance, scales cleanly to any board size, and sidesteps the
+  // iOS-only rendering bug the old glyph-based pieces needed a workaround for.
+  var PIECE_TYPE_CODE = { king: "K", queen: "Q", rook: "R", bishop: "B", knight: "N", pawn: "P" };
+
+  function pieceImageSrc(type, color) {
+    return "pieces/" + (color === "white" ? "w" : "b") + PIECE_TYPE_CODE[type] + ".svg";
+  }
+
+  function pieceImage(type, color, className) {
+    var img = document.createElement("img");
+    img.className = className;
+    img.src = pieceImageSrc(type, color);
+    img.alt = color + " " + type;
+    img.draggable = false;
+    return img;
+  }
 
   var PIECE_POINTS = { queen: 9, rook: 5, bishop: 3, knight: 3, pawn: 1 };
 
@@ -504,7 +510,7 @@
 
     var row = el("div", "captured-row");
     ownCaptures.forEach(function (type) {
-      row.appendChild(el("span", "piece-glyph", PIECE_GLYPH[type]));
+      row.appendChild(pieceImage(type, opponent, "piece-glyph"));
     });
     var advantage = materialValue(ownCaptures) - materialValue(theirCaptures);
     if (advantage > 0) {
@@ -601,8 +607,11 @@
     }
 
     if (piece) {
-      var glyph = el("span", "piece-glyph " + (piece.pieceColor === "white" ? "piece-white" : "piece-black") +
-        (pieceRotated ? " rotated" : ""), PIECE_GLYPH[piece.pieceType]);
+      var glyph = pieceImage(
+        piece.pieceType,
+        piece.pieceColor,
+        "piece-glyph" + (pieceRotated ? " rotated" : "")
+      );
       square.appendChild(glyph);
     }
 
@@ -691,8 +700,10 @@
     var card = el("div", "overlay-card");
     card.appendChild(el("div", "overlay-title", "Promote pawn to…"));
     var choices = el("div", "promotion-choices");
+    var promotingColor = game.sideToMove();
     ["queen", "rook", "bishop", "knight"].forEach(function (type) {
-      var button = el("button", null, PIECE_GLYPH[type]);
+      var button = el("button", null, null);
+      button.appendChild(pieceImage(type, promotingColor, "piece-glyph"));
       button.addEventListener("click", function () {
         choosePromotion(type);
       });

@@ -15,11 +15,12 @@ the real target.)
   30 min), or a custom time + increment
 - Fixed board — White at the bottom, Black at the top — with all the pieces
   rotating 180° each turn so whoever's moving reads the board right-side up
-- Each player's clock and captured pieces sit in a bar at their end of the
-  board, rotated to face them
+- Each side's clock, captured pieces, and material advantage sit together in
+  the side panel, ordered to match whoever's at each end of the board
 - Resign, offer/accept a draw, or start a rematch
 - Optional single-player mode against a built-in bot (a rough ~1000 Elo
-  design target, not a calibrated rating)
+  design target, not a calibrated rating) — when playing as Black, the board
+  flips so your own pieces are always at the bottom
 - A minimalist, mostly-monochrome color scheme
 
 ## Project layout
@@ -57,3 +58,8 @@ cp web-engine/build/kotlin-webpack/js/productionExecutable/chess-engine.js web/c
 ```
 
 Pushing to `main` auto-deploys the web build via GitHub Actions.
+
+## Credits
+
+The web build's piece artwork is the "Cburnett" set by Colin M.L. Burnett
+(CC BY-SA 3.0) — see `web/pieces/README.md`.

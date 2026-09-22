@@ -238,7 +238,8 @@ button {
 }
 
 .captured-row .piece-glyph {
-  font-size: 16px;
+  width: 20px;
+  height: 20px;
 }
 
 .material-advantage {
@@ -355,28 +356,20 @@ button {
   box-sizing: border-box;
 }
 
+/* Board pieces are sized generously (most of the square) since real artwork, unlike the old
+   text glyphs, doesn't lose quality or risk clipping at a larger size. */
 .piece-glyph {
   position: relative;
-  font-size: min(7vw, 6vh);
-  line-height: 1;
+  display: block;
+  width: 82%;
+  height: 82%;
+  object-fit: contain;
   user-select: none;
   pointer-events: none;
 }
 
 .piece-glyph.rotated {
   transform: rotate(180deg);
-  display: inline-block;
-}
-
-.piece-white {
-  color: #FFFFFF;
-  -webkit-text-fill-color: #FFFFFF;
-  -webkit-text-stroke: 1.6px #000000;
-  paint-order: stroke fill;
-}
-
-.piece-black {
-  color: #141414;
 }
 
 .moves-title {
@@ -478,9 +471,13 @@ button {
   border: 1px solid var(--surface-variant);
   background: var(--surface);
   border-radius: 10px;
-  font-size: 32px;
   padding: 8px 12px;
   cursor: pointer;
+}
+
+.promotion-choices .piece-glyph {
+  width: 40px;
+  height: 40px;
 }
 
 .overlay-actions {
