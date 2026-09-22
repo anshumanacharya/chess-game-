@@ -109,6 +109,10 @@ shared engine changed.
   a stale/summarized task context describes. If working directory, repo
   content, and task summary disagree, stop and confirm with the user before
   continuing — don't assume the summary is right.
+- Web game layout: `.game-screen` needs a definite height (`flex: none` + `100dvh`, and
+  `grid-template-rows: minmax(0, 1fr)`) for `.moves-list` to scroll internally — with
+  `flex: 1` inside `#app`'s column flexbox the height is ignored and a long game stretches the
+  page (and the board with it). `render()` rebuilds the DOM, so it re-pins the list's scroll.
 - CI (`deploy-pages.yml`) checks out with `submodules: true` (not
   `--recursive`) deliberately — the bot submodule's own nested submodule
   (a copy of *this* repo, used only so it can build standalone) isn't needed

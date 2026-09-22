@@ -18,6 +18,11 @@ val BoardLegalTarget = Color(0xFF141E0A)
 val BoardLastMove = Color(0xFFC9A66B)
 val BoardCheck = Color(0xFFB3453D)
 
+// The promotion dialog stays light even in dark theme (mirrors web's .promotion-card): Black's
+// piece artwork all but disappears against the dark-theme surface.
+val PromotionDialogBackground = Color(0xFFFFFFFF)
+val PromotionDialogText = Color(0xFF1B1B1F)
+
 private val DarkColors = darkColorScheme(
     primary = Color(0xFF9FB0BE),
     onPrimary = Color(0xFF1B1B1B),

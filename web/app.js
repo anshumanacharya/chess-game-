@@ -86,6 +86,10 @@
       root.appendChild(renderSetupScreen());
     } else {
       root.appendChild(renderGameScreen());
+      // Every render rebuilds the list from scratch (scrolled to the top), so pin it to the
+      // latest move — matching Android's MoveHistoryList auto-scroll.
+      var movesList = root.querySelector(".moves-list");
+      if (movesList) movesList.scrollTop = movesList.scrollHeight;
       if (pendingPromotion) root.appendChild(renderPromotionOverlay());
       else if (gameOverReason) root.appendChild(renderGameOverOverlay());
       else if (showResignConfirm) root.appendChild(renderResignOverlay());
@@ -509,9 +513,13 @@
     var theirCaptures = game.capturedPieces(color); // pieces the opponent has captured from them
 
     var row = el("div", "captured-row");
-    ownCaptures.forEach(function (type) {
-      row.appendChild(pieceImage(type, opponent, "piece-glyph"));
-    });
+    if (ownCaptures.length > 0) {
+      var pieces = el("span", "captured-pieces");
+      ownCaptures.forEach(function (type) {
+        pieces.appendChild(pieceImage(type, opponent, "piece-glyph"));
+      });
+      row.appendChild(pieces);
+    }
     var advantage = materialValue(ownCaptures) - materialValue(theirCaptures);
     if (advantage > 0) {
       row.appendChild(el("span", "material-advantage", "+" + advantage));
@@ -697,7 +705,7 @@
 
   function renderPromotionOverlay() {
     var backdrop = el("div", "overlay-backdrop");
-    var card = el("div", "overlay-card");
+    var card = el("div", "overlay-card promotion-card");
     card.appendChild(el("div", "overlay-title", "Promote pawn to…"));
     var choices = el("div", "promotion-choices");
     var promotingColor = game.sideToMove();
