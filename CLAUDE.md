@@ -65,7 +65,9 @@ shared engine changed.
   `web/style.css` (`--board-light`, `--board-dark`, `--legal-target`, …) —
   keep these two in sync by hex value when changing board theme.
   Current theme: lichess.org's default ("brown") board
-  (`#F0D9B5`/`#B58863`), dark near-black legal-move dot (`#141E0A`).
+  (`#F0D9B5`/`#B58863`), dark near-black legal-move dot (`#141E0A`) on empty
+  squares; a red frame around the square (`#D13B2F`, `BoardCaptureTarget` /
+  `--capture-target`) marks a capturable piece, since a dot/ring hides behind the artwork.
 - Pieces render as real Cburnett artwork on both platforms, not Unicode
   glyphs: `web/pieces/*.svg` on web, hand-converted
   `app/src/main/res/drawable/piece_*.xml` VectorDrawables on Android

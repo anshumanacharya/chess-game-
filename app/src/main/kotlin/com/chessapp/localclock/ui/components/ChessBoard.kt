@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
@@ -25,6 +24,7 @@ import com.chessapp.engine.Color as EngineColor
 import com.chessapp.engine.GameStatus
 import com.chessapp.engine.Piece
 import com.chessapp.engine.Square
+import com.chessapp.localclock.ui.theme.BoardCaptureTarget
 import com.chessapp.localclock.ui.theme.BoardCheck
 import com.chessapp.localclock.ui.theme.BoardDarkSquare
 import com.chessapp.localclock.ui.theme.BoardLastMove
@@ -134,8 +134,7 @@ private fun SquareCell(
                 Box(
                     Modifier
                         .fillMaxSize()
-                        .padding(size * 0.06f)
-                        .border(width = size * 0.06f, color = BoardLegalTarget.copy(alpha = 0.85f), shape = CircleShape)
+                        .border(width = size * 0.08f, color = BoardCaptureTarget.copy(alpha = 0.85f))
                 )
             }
         }

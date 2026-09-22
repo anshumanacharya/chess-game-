@@ -12,6 +12,7 @@
   --accent-ink: #3A4A5A;
   --on-accent-ink: #FFFFFF;
   --legal-target: #141E0A;
+  --capture-target: #D13B2F;
   --last-move: #C9A66B;
   --check: #B3453D;
   --on-check: #FFFFFF;
@@ -379,13 +380,16 @@ button {
   opacity: 0.75;
 }
 
-.legal-ring {
+.capture-target {
+  /* A red frame around the whole square (rather than a dot or ring the piece artwork would
+     hide) marks an enemy piece that can be captured. Built from two gradients instead of a
+     border because border widths can't be a percentage of the square. */
   position: absolute;
-  inset: 6%;
-  border-radius: 50%;
-  border: 6% solid var(--legal-target);
+  inset: 0;
   opacity: 0.85;
-  box-sizing: border-box;
+  background:
+    linear-gradient(to right, var(--capture-target) 8%, transparent 8% 92%, var(--capture-target) 92%),
+    linear-gradient(to bottom, var(--capture-target) 8%, transparent 8% 92%, var(--capture-target) 92%);
 }
 
 /* Board pieces are sized generously (most of the square) since real artwork, unlike the old
