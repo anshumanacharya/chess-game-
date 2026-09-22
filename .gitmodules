@@ -1,0 +1,4 @@
+[submodule "chess-bot"]
+	path = chess-bot
+	url = https://github.com/anshumanacharya/chess-game-bot
+	branch = main

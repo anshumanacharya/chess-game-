@@ -9,6 +9,12 @@ on:
       - "web/**"
       - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
+  # The bot's own code lives in a separate repo (chess-game-bot) and this build always compiles
+  # against its latest main branch (see updateBotSubmodule in build.gradle.kts) — but a push over
+  # there doesn't trigger a push here, so the deployed site wouldn't otherwise notice a bot-only
+  # change. This keeps the live site current without needing a cross-repo trigger.
+  schedule:
+    - cron: "0 6 * * *"
 
 permissions:
   contents: read
@@ -24,6 +30,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # chess-bot: the bot's own code, developed in a separate repo (chess-game-bot) and
+          # pulled in here as a git submodule. Not --recursive: that submodule's own nested
+          # submodule (its copy of this repo, used only so it can build/test standalone) isn't
+          # needed to build this site.
+          submodules: true
 
       - uses: actions/setup-java@v4
         with:

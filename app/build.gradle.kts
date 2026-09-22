@@ -41,6 +41,15 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+    sourceSets {
+        getByName("main") {
+            // The bot's own code (com.chessapp.bot.*) — developed in a separate repo, pulled in
+            // as source via the chess-bot submodule. It depends on chess-engine's types, which
+            // this module already has on its classpath below.
+            kotlin.srcDir("../chess-bot/src/main/kotlin")
+        }
+    }
 }
 
 dependencies {
@@ -65,4 +74,9 @@ dependencies {
     testImplementation(kotlin("test"))
     androidTestImplementation(platform("androidx.compose:compose-bom:2024.09.03"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+}
+
+// Always compile against the bot's latest code — see updateBotSubmodule in the root build file.
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    dependsOn(rootProject.tasks.named("updateBotSubmodule"))
 }

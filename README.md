@@ -26,10 +26,20 @@ the real target.)
 
 - `chess-engine/` — the chess rules and clock logic, pure Kotlin, unit-tested
 - `app/` — the Android app (Jetpack Compose)
-- `web-engine/` — compiles `chess-engine` to JavaScript for the web build
+- `web-engine/` — compiles `chess-engine` (and the bot, see below) to
+  JavaScript for the web build
 - `web/` — the static site (plain HTML/CSS/JS) hosted on GitHub Pages
+- `chess-bot/` — a git submodule pointing at
+  [chess-game-bot](https://github.com/anshumanacharya/chess-game-bot), a
+  separate repo where the single-player bot's search/evaluation/difficulty
+  tuning is developed. Every build here (Android and web) compiles against
+  that repo's latest `main`, not a pinned commit — see `updateBotSubmodule`
+  in `build.gradle.kts`.
 
 ## Building
+
+Clone with `--recurse-submodules` (or run `git submodule update --init`
+afterward) so `chess-bot/` is populated.
 
 **Android** — open the project in Android Studio and run it, or:
 

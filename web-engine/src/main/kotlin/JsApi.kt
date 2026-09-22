@@ -3,7 +3,7 @@
 // Deliberately no package: exported classes then hang directly off the compiled bundle's
 // global (e.g. `ChessEngine.JsGame`) instead of `ChessEngine.com.chessapp.web.JsGame`.
 
-import com.chessapp.engine.ChessBot
+import com.chessapp.bot.ChessBot
 import com.chessapp.engine.Color
 import com.chessapp.engine.ClockConfig
 import com.chessapp.engine.ClockState

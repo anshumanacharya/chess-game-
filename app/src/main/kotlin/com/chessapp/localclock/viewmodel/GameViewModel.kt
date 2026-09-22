@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.chessapp.engine.ChessBot
+import com.chessapp.bot.ChessBot
 import com.chessapp.engine.ClockConfig
 import com.chessapp.engine.ClockState
 import com.chessapp.engine.Color
