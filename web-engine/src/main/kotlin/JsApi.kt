@@ -3,6 +3,7 @@
 // Deliberately no package: exported classes then hang directly off the compiled bundle's
 // global (e.g. `ChessEngine.JsGame`) instead of `ChessEngine.com.chessapp.web.JsGame`.
 
+import com.chessapp.engine.ChessBot
 import com.chessapp.engine.Color
 import com.chessapp.engine.ClockConfig
 import com.chessapp.engine.ClockState
@@ -74,9 +75,32 @@ private fun Move.toJsMove(): JsMove = JsMove(
 @JsExport
 class JsGame {
     private var state: GameState = GameState.newGame()
+    private val bot = ChessBot()
+    private var botColor: Color? = null
 
     fun reset() {
         state = GameState.newGame()
+        botColor = null
+    }
+
+    /** Sets which side (if any) the bot plays; pass null for a pass-and-play game. */
+    fun setBot(color: String?) {
+        botColor = color?.let(::colorFromString)
+    }
+
+    fun hasBot(): Boolean = botColor != null
+
+    fun isBotTurn(): Boolean = botColor != null && botColor == state.sideToMove
+
+    /**
+     * Picks and applies the bot's move for the current position, returning it, or null if it
+     * isn't the bot's turn or the game is already over (no legal move).
+     */
+    fun playBotMove(): JsMove? {
+        if (!isBotTurn()) return null
+        val move = bot.chooseMove(state) ?: return null
+        state = MoveGenerator.applyMove(state, move)
+        return move.toJsMove()
     }
 
     fun sideToMove(): String = colorToString(state.sideToMove)

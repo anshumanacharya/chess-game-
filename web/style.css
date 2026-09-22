@@ -200,6 +200,11 @@ button {
   transform: rotate(180deg);
 }
 
+.bot-thinking {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
 .player-info {
   display: flex;
   flex-direction: column;

@@ -31,7 +31,10 @@ data class GameUiState(
     val clock: ClockState = ClockState.from(ClockConfig.UNLIMITED),
     val selectedSquare: Square? = null,
     val pendingPromotion: PendingPromotion? = null,
-    val gameOverReason: GameOverReason? = null
+    val gameOverReason: GameOverReason? = null,
+    /** null means pass-and-play (both sides human); otherwise the color the bot plays. */
+    val botColor: Color? = null,
+    val isBotThinking: Boolean = false
 ) {
     // These read pure, already-committed board state to drive display (status text, highlighted
     // legal-move dots) rather than committing anything, so they call MoveGenerator directly
@@ -45,6 +48,11 @@ data class GameUiState(
         get() = selectedSquare?.let { MoveGenerator.legalMovesFrom(position, it) } ?: emptyList()
 
     val isGameOver: Boolean get() = gameOverReason != null
+
+    /** The human's color when playing against the bot; null in pass-and-play. */
+    val humanColor: Color? get() = botColor?.opposite()
+
+    val isBotTurn: Boolean get() = botColor != null && botColor == position.sideToMove && !isGameOver
 
     /** null means the game ended in a draw. */
     val winner: Color?

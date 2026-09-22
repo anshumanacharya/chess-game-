@@ -37,19 +37,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.chessapp.engine.ClockConfig
+import com.chessapp.engine.Color
 
 private enum class ClockMode { TIMED, UNLIMITED }
+private enum class Opponent { HUMAN, COMPUTER }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SetupScreen(
-    onStartGame: (clockConfig: ClockConfig) -> Unit
+    onStartGame: (clockConfig: ClockConfig, botColor: Color?) -> Unit
 ) {
     var clockMode by remember { mutableStateOf(ClockMode.TIMED) }
     var selectedPresetIndex by remember { mutableStateOf(3) } // "10 min"
     var useCustom by remember { mutableStateOf(false) }
     var customMinutes by remember { mutableIntStateOf(15) }
     var customIncrement by remember { mutableIntStateOf(0) }
+    var opponent by remember { mutableStateOf(Opponent.HUMAN) }
+    var humanPlaysWhite by remember { mutableStateOf(true) }
 
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
     Column(
@@ -65,6 +69,44 @@ fun SetupScreen(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+
+        Spacer(Modifier.height(32.dp))
+
+        SectionHeader("Opponent")
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            FilterChip(
+                selected = opponent == Opponent.HUMAN,
+                onClick = { opponent = Opponent.HUMAN },
+                label = { Text("Pass and play") }
+            )
+            FilterChip(
+                selected = opponent == Opponent.COMPUTER,
+                onClick = { opponent = Opponent.COMPUTER },
+                label = { Text("Computer (~1000 Elo)") }
+            )
+        }
+
+        if (opponent == Opponent.COMPUTER) {
+            Spacer(Modifier.height(12.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                FilterChip(
+                    selected = humanPlaysWhite,
+                    onClick = { humanPlaysWhite = true },
+                    label = { Text("Play as White") }
+                )
+                FilterChip(
+                    selected = !humanPlaysWhite,
+                    onClick = { humanPlaysWhite = false },
+                    label = { Text("Play as Black") }
+                )
+            }
+        }
 
         Spacer(Modifier.height(32.dp))
 
@@ -142,7 +184,12 @@ fun SetupScreen(
                     useCustom -> ClockConfig.preset(customMinutes, customIncrement)
                     else -> ClockConfig.PRESETS[selectedPresetIndex].second
                 }
-                onStartGame(config)
+                val botColor = if (opponent == Opponent.COMPUTER) {
+                    if (humanPlaysWhite) Color.BLACK else Color.WHITE
+                } else {
+                    null
+                }
+                onStartGame(config, botColor)
             },
             modifier = Modifier
                 .fillMaxWidth()

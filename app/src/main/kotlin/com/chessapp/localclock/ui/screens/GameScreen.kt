@@ -101,7 +101,15 @@ fun GameScreen(
                     modifier = Modifier.fillMaxSize()
                 )
             }
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(8.dp))
+            if (uiState.isBotThinking) {
+                Text(
+                    "Computer is thinking…",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(Modifier.height(8.dp))
 
             PlayerBar(
                 name = "White",
@@ -137,7 +145,7 @@ fun GameScreen(
                 OutlinedButton(
                     onClick = { showDrawOfferConfirm = true },
                     modifier = Modifier.weight(1f),
-                    enabled = !uiState.isGameOver
+                    enabled = !uiState.isGameOver && uiState.botColor == null
                 ) {
                     Text("Offer draw")
                 }
@@ -173,7 +181,7 @@ fun GameScreen(
     }
 
     if (showResignConfirm) {
-        val resigningColor = uiState.position.sideToMove
+        val resigningColor = uiState.humanColor ?: uiState.position.sideToMove
         AlertDialog(
             onDismissRequest = { showResignConfirm = false },
             title = { Text("Resign?") },

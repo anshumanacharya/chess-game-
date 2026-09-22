@@ -18,6 +18,8 @@ the real target.)
 - Each player's clock and captured pieces sit in a bar at their end of the
   board, rotated to face them
 - Resign, offer/accept a draw, or start a rematch
+- Optional single-player mode against a built-in bot (a rough ~1000 Elo
+  design target, not a calibrated rating)
 - A minimalist, mostly-monochrome color scheme
 
 ## Project layout

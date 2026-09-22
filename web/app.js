@@ -57,8 +57,14 @@
     presetIndex: 3,
     useCustom: false,
     customMinutes: 15,
-    customIncrement: 0
+    customIncrement: 0,
+    opponent: "human", // "human" | "computer"
+    humanPlaysWhite: true
   };
+
+  var botMoveTimeout = null;
+  var isBotThinking = false;
+  var currentBotColor = null; // "white" | "black" | null
 
   var root = document.getElementById("app");
 
@@ -86,6 +92,31 @@
 
     card.appendChild(el("div", "setup-title", "Local Chess"));
     card.appendChild(el("div", "setup-subtitle", "Two players, one screen – web test build"));
+
+    card.appendChild(el("div", "section-header", "Opponent"));
+    var opponentRow = el("div", "chip-row");
+    opponentRow.appendChild(chip("Pass and play", setupState.opponent === "human", function () {
+      setupState.opponent = "human";
+      render();
+    }));
+    opponentRow.appendChild(chip("Computer (~1000 Elo)", setupState.opponent === "computer", function () {
+      setupState.opponent = "computer";
+      render();
+    }));
+    card.appendChild(opponentRow);
+
+    if (setupState.opponent === "computer") {
+      var colorRow = el("div", "chip-row");
+      colorRow.appendChild(chip("Play as White", setupState.humanPlaysWhite, function () {
+        setupState.humanPlaysWhite = true;
+        render();
+      }));
+      colorRow.appendChild(chip("Play as Black", !setupState.humanPlaysWhite, function () {
+        setupState.humanPlaysWhite = false;
+        render();
+      }));
+      card.appendChild(colorRow);
+    }
 
     card.appendChild(el("div", "section-header", "Chess clock"));
     var modeRow = el("div", "chip-row");
@@ -137,6 +168,9 @@
         var preset = PRESETS[setupState.presetIndex];
         config = { minutes: preset.minutes, increment: preset.increment, unlimited: false };
       }
+      config.botColor = setupState.opponent === "computer"
+        ? (setupState.humanPlaysWhite ? "black" : "white")
+        : null;
       startGame(config);
     });
     card.appendChild(startButton);
@@ -179,17 +213,22 @@
 
   function startGame(config) {
     lastConfig = config;
+    currentBotColor = config.botColor || null;
     game = new JsGame();
+    game.setBot(currentBotColor);
     clock = new JsClock(config.minutes, config.increment, config.unlimited);
     clock.start("white");
     selected = null;
     pendingPromotion = null;
     gameOverReason = null;
     showResignConfirm = false;
+    showDrawOfferConfirm = false;
+    isBotThinking = false;
     moveLog = [];
     screen = "game";
     startTicker();
     render();
+    maybeTriggerBotMove();
   }
 
   function rematch() {
@@ -233,7 +272,7 @@
   });
 
   function onSquareTapped(file, rank) {
-    if (gameOverReason) return;
+    if (gameOverReason || game.isBotTurn()) return;
     var piece = pieceAt(file, rank);
     var sideToMove = game.sideToMove();
 
@@ -268,17 +307,53 @@
   function applyMove(move) {
     var movedColor = game.sideToMove();
     game.applyMoveExact(move.fromFile, move.fromRank, move.toFile, move.toRank, move.promotion || null);
+    selected = null;
+    pendingPromotion = null;
+    afterMoveApplied(movedColor, move);
+  }
+
+  /** Shared post-move bookkeeping (clock, move log, game-over/bot-turn check) for both a human
+   *  move (applyMove) and a bot move (the maybeTriggerBotMove timeout below), so the two paths
+   *  can't drift out of sync. */
+  function afterMoveApplied(movedColor, move) {
     var nextColor = game.sideToMove();
     clock.onMoveCompleted(movedColor, nextColor);
     moveLog.push(move.algebraic);
-    selected = null;
-    pendingPromotion = null;
 
     var status = game.status();
     if (status === "checkmate" || status === "stalemate" || status === "draw_fifty_move" ||
         status === "draw_repetition" || status === "draw_insufficient_material") {
       endGame(status);
+      return;
     }
+    render();
+    maybeTriggerBotMove();
+  }
+
+  /** If it's the bot's turn, picks its move after a short delay so its reply doesn't feel
+   *  instantaneous, then applies it exactly like a human move. Re-checks isBotTurn() after the
+   *  delay in case the game ended (e.g. the human resigned) while it was "thinking". */
+  function maybeTriggerBotMove() {
+    if (!game.hasBot() || !game.isBotTurn()) return;
+    isBotThinking = true;
+    render();
+    if (botMoveTimeout !== null) clearTimeout(botMoveTimeout);
+    botMoveTimeout = setTimeout(function () {
+      botMoveTimeout = null;
+      if (gameOverReason || !game.isBotTurn()) {
+        isBotThinking = false;
+        render();
+        return;
+      }
+      var movedColor = game.sideToMove();
+      var move = game.playBotMove();
+      isBotThinking = false;
+      if (!move) {
+        render();
+        return;
+      }
+      afterMoveApplied(movedColor, move);
+    }, 500);
   }
 
   function choosePromotion(promotion) {
@@ -294,6 +369,11 @@
 
   function endGame(reason) {
     stopTicker();
+    if (botMoveTimeout !== null) {
+      clearTimeout(botMoveTimeout);
+      botMoveTimeout = null;
+    }
+    isBotThinking = false;
     gameOverReason = reason;
     selected = null;
     pendingPromotion = null;
@@ -304,12 +384,23 @@
     endGame(color === "white" ? "white_resigned" : "black_resigned");
   }
 
+  // The human's color when playing against the bot; null in pass-and-play.
+  function humanColor() {
+    if (!currentBotColor) return null;
+    return currentBotColor === "white" ? "black" : "white";
+  }
+
   function agreeToDraw() {
     endGame("draw_agreed");
   }
 
   function backToSetup() {
     stopTicker();
+    if (botMoveTimeout !== null) {
+      clearTimeout(botMoveTimeout);
+      botMoveTimeout = null;
+    }
+    isBotThinking = false;
     screen = "setup";
     render();
   }
@@ -350,6 +441,9 @@
     var boardPane = el("div", "board-pane");
     boardPane.appendChild(renderPlayerBar("black", true));
     boardPane.appendChild(renderBoardWrap());
+    if (isBotThinking) {
+      boardPane.appendChild(el("div", "bot-thinking", "Computer is thinking…"));
+    }
     boardPane.appendChild(renderPlayerBar("white", false));
     screenEl.appendChild(boardPane);
 
@@ -495,7 +589,7 @@
     var buttonRow = el("div", "button-row");
 
     var drawButton = el("button", "outlined-button", "Offer draw");
-    drawButton.disabled = !!gameOverReason;
+    drawButton.disabled = !!gameOverReason || !!currentBotColor;
     drawButton.addEventListener("click", function () {
       showDrawOfferConfirm = true;
       render();
@@ -574,7 +668,7 @@
   function renderResignOverlay() {
     var backdrop = el("div", "overlay-backdrop");
     var card = el("div", "overlay-card");
-    var resigningColor = game.sideToMove();
+    var resigningColor = humanColor() || game.sideToMove();
     card.appendChild(el("div", "overlay-title", "Resign?"));
     card.appendChild(el("div", "overlay-text", (resigningColor === "white" ? "White" : "Black") + " will lose the game."));
     var actions = el("div", "overlay-actions");

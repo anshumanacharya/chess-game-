@@ -59,6 +59,40 @@ class JsApiTest {
     }
 
     @Test
+    fun withNoBotSetIsBotTurnIsAlwaysFalse() {
+        val game = JsGame()
+        assertTrue(!game.hasBot())
+        assertTrue(!game.isBotTurn())
+        assertNull(game.playBotMove())
+    }
+
+    @Test
+    fun settingBotToTheSideToMoveMakesItsTurn() {
+        val game = JsGame()
+        game.setBot("white")
+        assertTrue(game.hasBot())
+        assertTrue(game.isBotTurn())
+    }
+
+    @Test
+    fun playBotMovePlaysALegalMoveAndSwitchesSideToMove() {
+        val game = JsGame()
+        game.setBot("white")
+        val move = game.playBotMove()
+        assertTrue(move != null)
+        assertEquals("black", game.sideToMove())
+        assertTrue(!game.isBotTurn())
+    }
+
+    @Test
+    fun playBotMoveDoesNothingWhenItIsNotTheBotsTurn() {
+        val game = JsGame()
+        game.setBot("black")
+        assertNull(game.playBotMove())
+        assertEquals("white", game.sideToMove())
+    }
+
+    @Test
     fun clockTicksDownActiveColorAndAppliesIncrementOnMoveCompletion() {
         val clock = JsClock(initialMinutes = 5, incrementSeconds = 2, unlimited = false)
         clock.start("white")

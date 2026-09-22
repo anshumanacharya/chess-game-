@@ -14,6 +14,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.chessapp.engine.ClockConfig
+import com.chessapp.engine.Color
 import com.chessapp.localclock.ui.screens.GameScreen
 import com.chessapp.localclock.ui.screens.SetupScreen
 import com.chessapp.localclock.ui.theme.LocalChessClockTheme
@@ -44,8 +45,8 @@ private fun ChessApp() {
 
     when (screen) {
         is Screen.Setup -> SetupScreen(
-            onStartGame = { config: ClockConfig ->
-                viewModel.startNewGame(config)
+            onStartGame = { config: ClockConfig, botColor: Color? ->
+                viewModel.startNewGame(config, botColor)
                 screen = Screen.Game
             }
         )
