@@ -86,6 +86,10 @@
       root.appendChild(renderSetupScreen());
     } else {
       root.appendChild(renderGameScreen());
+      // Every render rebuilds the list from scratch (scrolled to the top), so pin it to the
+      // latest move — matching Android's MoveHistoryList auto-scroll.
+      var movesList = root.querySelector(".moves-list");
+      if (movesList) movesList.scrollTop = movesList.scrollHeight;
       if (pendingPromotion) root.appendChild(renderPromotionOverlay());
       else if (gameOverReason) root.appendChild(renderGameOverOverlay());
       else if (showResignConfirm) root.appendChild(renderResignOverlay());
@@ -697,7 +701,7 @@
 
   function renderPromotionOverlay() {
     var backdrop = el("div", "overlay-backdrop");
-    var card = el("div", "overlay-card");
+    var card = el("div", "overlay-card promotion-card");
     card.appendChild(el("div", "overlay-title", "Promote pawn to…"));
     var choices = el("div", "promotion-choices");
     var promotingColor = game.sideToMove();

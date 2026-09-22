@@ -13,6 +13,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.chessapp.engine.Color
 import com.chessapp.engine.PieceType
+import com.chessapp.localclock.ui.theme.PromotionDialogBackground
+import com.chessapp.localclock.ui.theme.PromotionDialogText
 
 @Composable
 fun PromotionDialog(color: Color, onChoose: (PieceType) -> Unit, onDismiss: () -> Unit) {
@@ -32,6 +34,9 @@ fun PromotionDialog(color: Color, onChoose: (PieceType) -> Unit, onDismiss: () -
                 }
             }
         },
-        confirmButton = {}
+        confirmButton = {},
+        containerColor = PromotionDialogBackground,
+        titleContentColor = PromotionDialogText,
+        textContentColor = PromotionDialogText
     )
 }
