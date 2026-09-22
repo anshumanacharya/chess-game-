@@ -592,12 +592,19 @@
   }
 
   // Mirrors the board-pane's own top/bottom structure (opponent's bar, board, player's bar) so
-  // the side panel reads as the same kind of sandwich and is naturally the same height: Black's
-  // clock pinned to the top, White's pinned to the bottom, everything else scrolls in between.
+  // the side panel reads as the same kind of sandwich and is naturally the same height:
+  // whichever color's clock is on top/bottom matches where that color's pieces sit on the board.
+  // In pass-and-play there's no single human seat, so this defaults to Black-top/White-bottom;
+  // against the bot, the human's own color is always on the bottom, matching the board flip in
+  // renderBoardWrap.
   function renderSidePanel() {
     var panel = el("div", "side-panel");
 
-    panel.appendChild(renderClockPill("black"));
+    var humanIsBlack = humanColor() === "black";
+    var topColor = humanIsBlack ? "white" : "black";
+    var bottomColor = humanIsBlack ? "black" : "white";
+
+    panel.appendChild(renderClockPill(topColor));
 
     var middle = el("div", "side-panel-middle");
 
@@ -640,7 +647,7 @@
 
     panel.appendChild(middle);
 
-    panel.appendChild(renderClockPill("white"));
+    panel.appendChild(renderClockPill(bottomColor));
 
     return panel;
   }
