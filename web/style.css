@@ -157,17 +157,14 @@ button {
 
 /* ---------- Game screen ---------- */
 
-/* Three rows shared by both columns — this (not matching total heights) is what actually
-   guarantees the board and the clocks-and-moves panel line up edge to edge: row 1 is exactly as
-   tall as the taller of {Black's name/captured bar, Black's clock}, row 3 the same for White's,
-   and row 2 (the board / the moves panel) gets whatever's left, identically in both columns. */
+/* Two columns, both stretching to the same (default) height — this is what guarantees the board
+   and the side panel line up edge to edge, now that neither has any top/bottom bars competing
+   for height of its own. */
 .game-screen {
   flex: 1;
   display: grid;
   grid-template-columns: 3fr 1fr;
-  grid-template-rows: auto 1fr auto;
   column-gap: 24px;
-  row-gap: 16px;
   padding: 24px;
   min-height: 0;
 }
@@ -177,56 +174,34 @@ button {
     display: flex;
     flex-direction: column;
   }
-  .board-pane {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-    min-height: 0;
-    min-width: 0;
-  }
 }
 
-/* display: contents removes .board-pane's own box so its children become direct grid items of
-   .game-screen instead of being boxed together — that's what lets each of them line up with its
-   counterpart in the side panel's row, rather than the two columns only matching in total. */
 .board-pane {
-  display: contents;
-}
-
-.board-pane .player-bar.facing-away {
-  grid-column: 1;
-  grid-row: 1;
-}
-
-.board-pane .board-wrap {
-  grid-column: 1;
-  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
   min-height: 0;
   min-width: 0;
 }
 
-.board-pane .player-bar:not(.facing-away) {
-  grid-column: 1;
-  grid-row: 3;
-}
-
-/* Shares the board's cell (row 2) instead of taking a row of its own, so its presence never
-   shifts the board or the side panel out of alignment. */
-.board-pane .bot-thinking {
-  grid-column: 1;
-  grid-row: 2;
-  align-self: end;
-  justify-self: center;
+/* Overlaid on the board rather than taking up its own layout space, so its presence never
+   resizes the board or shifts the side panel out of alignment. */
+.bot-thinking {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 14px;
+  color: var(--text-muted);
   background: var(--surface);
   padding: 4px 12px;
   border-radius: 8px;
-  margin-bottom: 8px;
 }
 
 .side-panel {
   grid-column: 2;
-  grid-row: 2;
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -246,41 +221,31 @@ button {
   min-height: 0;
 }
 
-.player-bar {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.player-bar.facing-away {
-  transform: rotate(180deg);
-}
-
-.bot-thinking {
-  font-size: 14px;
-  color: var(--text-muted);
-}
-
-.player-info {
+.side-clock-block {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-}
-
-.player-name {
-  font-size: 15px;
-  font-weight: 600;
+  align-items: center;
+  gap: 6px;
 }
 
 .captured-row {
   display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 2px;
   min-height: 18px;
 }
 
 .captured-row .piece-glyph {
   font-size: 16px;
+}
+
+.material-advantage {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-left: 4px;
 }
 
 .clock-pill {
@@ -304,15 +269,8 @@ button {
   color: var(--on-check);
 }
 
-.clock-pill.facing-away {
+.side-clock-block.facing-away {
   transform: rotate(180deg);
-}
-
-.clock-label {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  opacity: 0.75;
 }
 
 .clock-time {

@@ -26,6 +26,12 @@
     pawn: "♟︎"
   };
 
+  var PIECE_POINTS = { queen: 9, rook: 5, bishop: 3, knight: 3, pawn: 1 };
+
+  function materialValue(capturedTypes) {
+    return capturedTypes.reduce(function (sum, type) { return sum + (PIECE_POINTS[type] || 0); }, 0);
+  }
+
   var GAME_OVER_TEXT = {
     checkmate: "Checkmate",
     stalemate: "Stalemate",
@@ -439,12 +445,10 @@
     var screenEl = el("div", "game-screen");
 
     var boardPane = el("div", "board-pane");
-    boardPane.appendChild(renderPlayerBar("black", true));
     boardPane.appendChild(renderBoardWrap());
     if (isBotThinking) {
       boardPane.appendChild(el("div", "bot-thinking", "Computer is thinking…"));
     }
-    boardPane.appendChild(renderPlayerBar("white", false));
     screenEl.appendChild(boardPane);
 
     screenEl.appendChild(renderSidePanel());
@@ -452,37 +456,25 @@
     return screenEl;
   }
 
-  function renderPlayerBar(color, facingAway) {
-    var bar = el("div", "player-bar" + (facingAway ? " facing-away" : ""));
-
-    var info = el("div", "player-info");
-    info.appendChild(el("div", "player-name", color === "white" ? "White" : "Black"));
-    var capturedRow = el("div", "captured-row");
-    var opponent = color === "white" ? "black" : "white";
-    game.capturedPieces(opponent).forEach(function (type) {
-      capturedRow.appendChild(el("span", "piece-glyph", PIECE_GLYPH[type]));
-    });
-    info.appendChild(capturedRow);
-    bar.appendChild(info);
-
-    return bar;
+  // Whether color's clock should be rotated to face that seat: only Black's, and only in
+  // pass-and-play (both players share one device without moving it); against the bot there's
+  // just one human seat, so neither clock rotates. Shared by the initial render and the ticker's
+  // in-place update below so the two can never drift out of sync with each other.
+  function clockFacesOpponentSeat(color) {
+    return color === "black" && !currentBotColor;
   }
 
-  // Clocks live in the side panel (not next to the board) so they never get squeezed off-screen
-  // on a short viewport where the board-pane's own height is already tight.
-  function renderClockPill(color) {
+  function clockPillClassName(color) {
     var isActive = clock.activeColor() === color && !gameOverReason;
     var isFlagged = clock.flaggedColor() === color;
-    // In pass-and-play, Black's clock is rotated to face Black's seat (opposite White's), same
-    // as the board pieces and Black's name bar — matching how a real board sits between two
-    // players. Against the bot there's only one human seat, so neither clock rotates.
-    var facesOpponentSeat = color === "black" && !currentBotColor;
-    var classes = "clock-pill" +
-      (isFlagged ? " flagged" : isActive ? " active" : "") +
-      (facesOpponentSeat ? " facing-away" : "");
-    var pill = el("div", classes);
+    return "clock-pill" + (isFlagged ? " flagged" : isActive ? " active" : "");
+  }
+
+  // No WHITE/BLACK label: position (top/bottom, matching the board orientation) and the
+  // captured-piece colors already say which clock is whose.
+  function renderClockPill(color) {
+    var pill = el("div", clockPillClassName(color));
     pill.id = "clock-pill-" + color;
-    pill.appendChild(el("div", "clock-label", color.toUpperCase()));
     var timeEl = el("div", "clock-time", clock.isUnlimited() ? "∞" : formatClockTime(clock.remainingMillis(color)));
     timeEl.id = "clock-time-" + color;
     pill.appendChild(timeEl);
@@ -490,17 +482,43 @@
   }
 
   /** Cheap in-place update for a plain clock tick, so a full re-render (and its DOM teardown)
-   *  doesn't happen ten times a second while nothing about the game itself has changed. */
+   *  doesn't happen ten times a second while nothing about the game itself has changed. Only
+   *  ever touches the pill/time elements, never the rotated .side-clock-block wrapper around
+   *  them, so a fast-ticking timed clock can never reset that rotation mid-game. */
   function updateClockDisplays() {
     ["white", "black"].forEach(function (color) {
       var pill = document.getElementById("clock-pill-" + color);
       var timeEl = document.getElementById("clock-time-" + color);
       if (!pill || !timeEl) return;
-      var isActive = clock.activeColor() === color && !gameOverReason;
-      var isFlagged = clock.flaggedColor() === color;
-      pill.className = "clock-pill" + (isFlagged ? " flagged" : isActive ? " active" : "");
+      pill.className = clockPillClassName(color);
       timeEl.textContent = clock.isUnlimited() ? "∞" : formatClockTime(clock.remainingMillis(color));
     });
+  }
+
+  // Captured pieces (with the classic +N material-advantage count for whichever side is ahead)
+  // shown right next to that side's clock in the side panel.
+  function renderCapturedRow(color) {
+    var opponent = color === "white" ? "black" : "white";
+    var ownCaptures = game.capturedPieces(opponent); // pieces THIS color has captured
+    var theirCaptures = game.capturedPieces(color); // pieces the opponent has captured from them
+
+    var row = el("div", "captured-row");
+    ownCaptures.forEach(function (type) {
+      row.appendChild(el("span", "piece-glyph", PIECE_GLYPH[type]));
+    });
+    var advantage = materialValue(ownCaptures) - materialValue(theirCaptures);
+    if (advantage > 0) {
+      row.appendChild(el("span", "material-advantage", "+" + advantage));
+    }
+    return row;
+  }
+
+  function renderSideClockBlock(color) {
+    var classes = "side-clock-block" + (clockFacesOpponentSeat(color) ? " facing-away" : "");
+    var block = el("div", classes);
+    block.appendChild(renderClockPill(color));
+    block.appendChild(renderCapturedRow(color));
+    return block;
   }
 
   function formatClockTime(millis) {
@@ -604,7 +622,7 @@
     var topColor = humanIsBlack ? "white" : "black";
     var bottomColor = humanIsBlack ? "black" : "white";
 
-    panel.appendChild(renderClockPill(topColor));
+    panel.appendChild(renderSideClockBlock(topColor));
 
     var middle = el("div", "side-panel-middle");
 
@@ -647,7 +665,7 @@
 
     panel.appendChild(middle);
 
-    panel.appendChild(renderClockPill(bottomColor));
+    panel.appendChild(renderSideClockBlock(bottomColor));
 
     return panel;
   }
