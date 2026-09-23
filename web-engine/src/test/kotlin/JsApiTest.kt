@@ -53,6 +53,33 @@ class JsApiTest {
     }
 
     @Test
+    fun promotionIsNotCountedAsACapturedPawnAndCountsTowardMaterial() {
+        val game = JsGame()
+        // a4 h6 a5 h5 a6 h4 axb7 h3 bxa8=Q
+        val moves = listOf(
+            intArrayOf(0, 1, 0, 3), intArrayOf(7, 6, 7, 5), intArrayOf(0, 3, 0, 4), intArrayOf(7, 5, 7, 4),
+            intArrayOf(0, 4, 0, 5), intArrayOf(7, 4, 7, 3), intArrayOf(0, 5, 1, 6), intArrayOf(7, 3, 7, 2)
+        )
+        for (m in moves) assertTrue(game.applyMoveExact(m[0], m[1], m[2], m[3], null))
+        assertTrue(game.applyMoveExact(1, 6, 0, 7, "queen"))
+        assertTrue(game.capturedPieces("white").isEmpty())
+        assertEquals(listOf("rook", "pawn"), game.capturedPieces("black").toList())
+        assertEquals(14, game.materialAdvantage("white"))
+        assertEquals(-14, game.materialAdvantage("black"))
+    }
+
+    @Test
+    fun startingPositionRepeatedThreeTimesIsADraw() {
+        val game = JsGame()
+        // Nf3 Nf6 Ng1 Ng8, twice: the starting position occurs for the third time.
+        val shuffle = listOf(intArrayOf(6, 0, 5, 2), intArrayOf(6, 7, 5, 5), intArrayOf(5, 2, 6, 0), intArrayOf(5, 5, 6, 7))
+        for (m in shuffle) assertTrue(game.applyMoveExact(m[0], m[1], m[2], m[3], null))
+        assertEquals("ongoing", game.status())
+        for (m in shuffle) assertTrue(game.applyMoveExact(m[0], m[1], m[2], m[3], null))
+        assertEquals("draw_repetition", game.status())
+    }
+
+    @Test
     fun sideToMoveKingSquareIfInCheckIsNullWhenNotInCheck() {
         val game = JsGame()
         assertNull(game.sideToMoveKingSquareIfInCheck())

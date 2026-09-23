@@ -86,8 +86,23 @@ object MoveGenerator {
     }
 
     /** Legal moves: pseudo-legal moves that don't leave the mover's own king in check. */
-    fun legalMoves(state: GameState): List<Move> =
-        pseudoLegalMoves(state).filter { move -> !isInCheck(applyMove(state, move), state.sideToMove) }
+    fun legalMoves(state: GameState): List<Move> {
+        val kingSquare = state.board.findKing(state.sideToMove)
+        return pseudoLegalMoves(state).filterNot { leavesOwnKingInCheck(state.board, it, kingSquare) }
+    }
+
+    /**
+     * Tries [move] on a scratch copy of the board only. Deliberately not [applyMove]: that builds
+     * a whole new [GameState] (copying the move history and repetition table, hashing the
+     * position), which made every legality check — and so every status check and bot search —
+     * slower the longer the game went on.
+     */
+    private fun leavesOwnKingInCheck(board: Board, move: Move, kingSquare: Square): Boolean {
+        val scratch = board.copy()
+        movePieces(scratch, move)
+        val kingNow = if (move.piece.type == PieceType.KING) move.to else kingSquare
+        return isSquareAttacked(scratch, kingNow, move.piece.color.opposite())
+    }
 
     fun legalMovesFrom(state: GameState, from: Square): List<Move> = legalMoves(state).filter { it.from == from }
 
@@ -233,27 +248,7 @@ object MoveGenerator {
     fun applyMove(state: GameState, move: Move): GameState {
         val board = state.board.copy()
         val piece = move.piece
-
-        move.capturedSquare?.let { board.setPiece(it, null) }
-        board.setPiece(move.from, null)
-        val placedPiece = if (move.promotion != null) Piece(piece.color, move.promotion) else piece
-        board.setPiece(move.to, placedPiece)
-
-        when (move.flag) {
-            MoveFlag.CASTLE_KINGSIDE -> {
-                val rank = move.from.rank
-                val rook = board.pieceAt(Square(7, rank))
-                board.setPiece(Square(7, rank), null)
-                board.setPiece(Square(5, rank), rook)
-            }
-            MoveFlag.CASTLE_QUEENSIDE -> {
-                val rank = move.from.rank
-                val rook = board.pieceAt(Square(0, rank))
-                board.setPiece(Square(0, rank), null)
-                board.setPiece(Square(3, rank), rook)
-            }
-            else -> {}
-        }
+        movePieces(board, move)
 
         var rights = state.castlingRights
         if (piece.type == PieceType.KING) {
@@ -297,6 +292,28 @@ object MoveGenerator {
         counts[key] = (counts[key] ?: 0) + 1
         newState = newState.copy(positionCounts = counts)
         return newState
+    }
+
+    /** Moves the piece(s) involved in [move] on [board] in place: removes any captured piece
+     *  (including en passant's), applies a promotion, and relocates the rook when castling. */
+    private fun movePieces(board: Board, move: Move) {
+        val piece = move.piece
+        move.capturedSquare?.let { board.setPiece(it, null) }
+        board.setPiece(move.from, null)
+        board.setPiece(move.to, if (move.promotion != null) Piece(piece.color, move.promotion) else piece)
+
+        val rank = move.from.rank
+        when (move.flag) {
+            MoveFlag.CASTLE_KINGSIDE -> {
+                board.setPiece(Square(5, rank), board.pieceAt(Square(7, rank)))
+                board.setPiece(Square(7, rank), null)
+            }
+            MoveFlag.CASTLE_QUEENSIDE -> {
+                board.setPiece(Square(3, rank), board.pieceAt(Square(0, rank)))
+                board.setPiece(Square(0, rank), null)
+            }
+            else -> {}
+        }
     }
 
     /** Encodes piece placement, side to move, castling rights and en-passant file for repetition detection. */

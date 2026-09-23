@@ -213,6 +213,34 @@ class ChessGameTest {
     }
 
     @Test
+    fun `promoting a pawn does not count it as captured`() {
+        val game = ChessGame()
+        game.play("a2", "a4"); game.play("h7", "h6")
+        game.play("a4", "a5"); game.play("h6", "h5")
+        game.play("a5", "a6"); game.play("h5", "h4")
+        game.play("a6", "b7"); game.play("h4", "h3") // white captures b7 pawn
+        game.play("b7", "a8", PieceType.QUEEN) // captures a8 rook and promotes
+        assertTrue(game.capturedPieces(Color.WHITE).isEmpty(), "White lost no piece: ${game.capturedPieces(Color.WHITE)}")
+        assertEquals(listOf(PieceType.ROOK, PieceType.PAWN), game.capturedPieces(Color.BLACK))
+        // White: 39 - pawn + promoted queen = 47; Black: 39 - pawn - rook = 33.
+        assertEquals(14, game.materialAdvantage(Color.WHITE))
+        assertEquals(-14, game.materialAdvantage(Color.BLACK))
+    }
+
+    @Test
+    fun `starting position repeated three times is a draw`() {
+        val game = ChessGame()
+        fun knightShuffle() {
+            game.play("g1", "f3"); game.play("g8", "f6")
+            game.play("f3", "g1"); game.play("f6", "g8")
+        }
+        knightShuffle() // starting position seen twice
+        assertEquals(GameStatus.ONGOING, game.status())
+        knightShuffle() // ...and a third time
+        assertEquals(GameStatus.DRAW_REPETITION, game.status())
+    }
+
+    @Test
     fun `moving into check is rejected as illegal`() {
         val board = Board.empty()
         board.setPiece(Square.fromAlgebraic("e1"), Piece(Color.WHITE, PieceType.KING))

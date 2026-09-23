@@ -9,6 +9,8 @@ import com.chessapp.engine.Move
 import com.chessapp.engine.MoveGenerator
 import com.chessapp.engine.PieceType
 import com.chessapp.engine.Square
+import com.chessapp.engine.capturedPieces
+import com.chessapp.engine.materialAdvantage
 
 enum class GameOverReason {
     CHECKMATE,
@@ -67,20 +69,7 @@ data class GameUiState(
             else -> null
         }
 
-    fun capturedPieces(color: Color): List<PieceType> {
-        val startCounts = linkedMapOf(
-            PieceType.QUEEN to 1,
-            PieceType.ROOK to 2,
-            PieceType.BISHOP to 2,
-            PieceType.KNIGHT to 2,
-            PieceType.PAWN to 8
-        )
-        val onBoard = position.board.piecesOf(color).groupingBy { it.second.type }.eachCount()
-        val captured = mutableListOf<PieceType>()
-        for ((type, startCount) in startCounts) {
-            val remaining = onBoard[type] ?: 0
-            repeat((startCount - remaining).coerceAtLeast(0)) { captured.add(type) }
-        }
-        return captured
-    }
+    fun capturedPieces(color: Color): List<PieceType> = position.capturedPieces(color)
+
+    fun materialAdvantage(color: Color): Int = position.materialAdvantage(color)
 }

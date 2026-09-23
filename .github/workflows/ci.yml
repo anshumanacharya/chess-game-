@@ -1,0 +1,58 @@
+name: CI
+
+# Checks every pull request before it can reach main (deploy-pages.yml only runs after a merge,
+# and never builds Android at all). The Android job is the only place the app is compiled —
+# local sandboxes without the Android SDK can't — so a red check here is the first sign of an
+# Android build break.
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  engine:
+    name: Engine tests (JVM + JS)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Not --recursive: see the note in deploy-pages.yml.
+          submodules: true
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Rules-engine tests on the JVM (what the Android app runs)
+        run: ./gradlew :chess-engine:test
+
+      - name: Engine + web API tests on the JS target (what the web build runs)
+        run: ./gradlew :web-engine:nodeTest
+
+  android:
+    name: Android build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # GitHub's Ubuntu runners ship the Android SDK (ANDROID_HOME is preset), so no extra setup.
+      - name: Build the debug APK
+        run: ./gradlew :app:assembleDebug

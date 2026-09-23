@@ -32,12 +32,6 @@
     return img;
   }
 
-  var PIECE_POINTS = { queen: 9, rook: 5, bishop: 3, knight: 3, pawn: 1 };
-
-  function materialValue(capturedTypes) {
-    return capturedTypes.reduce(function (sum, type) { return sum + (PIECE_POINTS[type] || 0); }, 0);
-  }
-
   var GAME_OVER_TEXT = {
     checkmate: "Checkmate",
     stalemate: "Stalemate",
@@ -510,7 +504,6 @@
   function renderCapturedRow(color) {
     var opponent = color === "white" ? "black" : "white";
     var ownCaptures = game.capturedPieces(opponent); // pieces THIS color has captured
-    var theirCaptures = game.capturedPieces(color); // pieces the opponent has captured from them
 
     var row = el("div", "captured-row");
     if (ownCaptures.length > 0) {
@@ -520,7 +513,7 @@
       });
       row.appendChild(pieces);
     }
-    var advantage = materialValue(ownCaptures) - materialValue(theirCaptures);
+    var advantage = game.materialAdvantage(color);
     if (advantage > 0) {
       row.appendChild(el("span", "material-advantage", "+" + advantage));
     }
