@@ -135,7 +135,9 @@ private fun SquareCell(
                                 0f to glow, 0.3f to glow, 0.78f to Color.Transparent,
                                 center = center,
                                 // CSS's default "farthest-corner" radius: half the diagonal.
-                                radius = size.minDimension * 0.7071f
+                                // `this.size` (the draw area), not SquareCell's own `size: Dp`
+                                // parameter, which shadows it here.
+                                radius = this.size.minDimension * 0.7071f
                             )
                         )
                     }
