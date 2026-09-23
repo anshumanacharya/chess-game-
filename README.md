@@ -62,3 +62,7 @@ Pushing to `main` auto-deploys the web build via GitHub Actions.
 
 The piece artwork (both the web build and the Android app) is the "Cburnett" set
 by Colin M.L. Burnett (CC BY-SA 3.0) — see `web/pieces/README.md`.
+
+The red LCD clock digits use the "DSEG7 Classic" font by keshikan (SIL Open Font License 1.1)
+— see `web/fonts/DSEG-LICENSE.txt`; the Android app bundles the same font as
+`app/src/main/res/font/dseg7_classic_bold.ttf`.

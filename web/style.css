@@ -12,7 +12,13 @@
   --accent-ink: #3A4A5A;
   --on-accent-ink: #FFFFFF;
   --legal-target: #141E0A;
-  --capture-target: #D13B2F;
+  --capture-target: #E8321E;
+  /* Red seven-segment LCD clocks: the panel is a physical display, so these stay the same in
+     dark mode. */
+  --lcd-panel: #120606;
+  --lcd-bezel: #2C1210;
+  --lcd-lit: #FF3B2A;
+  --lcd-dim: #7A1F18;
   --last-move: #C9A66B;
   --check: #B3453D;
   --on-check: #FFFFFF;
@@ -282,25 +288,54 @@ button {
   margin-left: 4px;
 }
 
+/* DSEG7 Classic (SIL Open Font License, fonts/DSEG-LICENSE.txt): a seven-segment LCD face. */
+@font-face {
+  font-family: "DSEG7 Classic";
+  src: url("fonts/DSEG7Classic-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: block;
+}
+
 .clock-pill {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  border-radius: 12px;
-  padding: 8px 20px;
-  min-width: 78px;
-  background: var(--surface-variant);
-  color: var(--text);
+  justify-content: center;
+  border-radius: 10px;
+  padding: 10px 16px;
+  min-width: 110px;
+  background: var(--lcd-panel);
+  border: 2px solid var(--lcd-bezel);
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.9);
 }
 
-.clock-pill.active {
-  background: var(--accent-ink);
-  color: var(--on-accent-ink);
+/* The lit digits sit exactly over a faint "88:88" of every segment, like a real LCD's unlit
+   segments; both strings come from the same format, so they line up character for character. */
+.clock-ghost {
+  color: var(--lcd-lit);
+  opacity: 0.1;
 }
 
-.clock-pill.flagged {
-  background: var(--check);
-  color: var(--on-check);
+.clock-digits {
+  position: absolute;
+  inset: 0;
+  color: var(--lcd-dim);
+}
+
+.clock-pill.active .clock-digits,
+.clock-pill.flagged .clock-digits {
+  color: var(--lcd-lit);
+  text-shadow: 0 0 6px rgba(255, 50, 30, 0.85), 0 0 14px rgba(255, 40, 20, 0.45);
+}
+
+.clock-pill.flagged .clock-digits {
+  animation: lcd-blink 1s steps(2, start) infinite;
+}
+
+@keyframes lcd-blink {
+  to { visibility: hidden; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clock-pill.flagged .clock-digits { animation: none; }
 }
 
 .side-clock-block.facing-away {
@@ -308,9 +343,11 @@ button {
 }
 
 .clock-time {
-  font-size: 22px;
+  position: relative;
+  font-family: "DSEG7 Classic", monospace;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-size: 26px;
+  line-height: 1;
 }
 
 .board-wrap {
@@ -361,9 +398,11 @@ button {
   opacity: 0.45;
 }
 
+/* A radial red glow (lichess-style) rather than a flat wash, so it can't be mistaken for the
+   flat capture tint below when both show at once (in check, able to take the checker). */
 .square-overlay.check {
-  background: var(--check);
-  opacity: 0.55;
+  background: radial-gradient(ellipse at center, var(--check) 0%, var(--check) 30%, transparent 78%);
+  opacity: 0.9;
 }
 
 .square-overlay.selected {
@@ -381,15 +420,12 @@ button {
 }
 
 .capture-target {
-  /* A red frame around the whole square (rather than a dot or ring the piece artwork would
-     hide) marks an enemy piece that can be captured. Built from two gradients instead of a
-     border because border widths can't be a percentage of the square. */
+  /* A soft red tint over the whole square (not a dot or ring, which the piece artwork would
+     hide) marks an enemy piece that can be captured. */
   position: absolute;
   inset: 0;
-  opacity: 0.85;
-  background:
-    linear-gradient(to right, var(--capture-target) 8%, transparent 8% 92%, var(--capture-target) 92%),
-    linear-gradient(to bottom, var(--capture-target) 8%, transparent 8% 92%, var(--capture-target) 92%);
+  background: var(--capture-target);
+  opacity: 0.4;
 }
 
 /* Board pieces are sized generously (most of the square) since real artwork, unlike the old

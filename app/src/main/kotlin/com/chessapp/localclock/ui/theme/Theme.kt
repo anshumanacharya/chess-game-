@@ -15,10 +15,17 @@ val BoardDarkSquare = Color(0xFFB58863)
 val AccentInk = Color(0xFF3A4A5A)
 val BoardSelected = AccentInk
 val BoardLegalTarget = Color(0xFF141E0A)
-// Red frame around a square holding a capturable enemy piece (a dot would be hidden by the piece).
-val BoardCaptureTarget = Color(0xFFD13B2F)
+// Soft red tint over a square holding a capturable enemy piece (a dot would be hidden by the piece).
+val BoardCaptureTarget = Color(0xFFE8321E)
 val BoardLastMove = Color(0xFFC9A66B)
 val BoardCheck = Color(0xFFB3453D)
+
+// Red seven-segment LCD clocks (mirrors web's --lcd-*): a physical-looking display, so the same
+// in dark and light theme.
+val LcdPanel = Color(0xFF120606)
+val LcdBezel = Color(0xFF2C1210)
+val LcdLit = Color(0xFFFF3B2A)
+val LcdDim = Color(0xFF7A1F18)
 
 // The promotion dialog stays light even in dark theme (mirrors web's .promotion-card): Black's
 // piece artwork all but disappears against the dark-theme surface.

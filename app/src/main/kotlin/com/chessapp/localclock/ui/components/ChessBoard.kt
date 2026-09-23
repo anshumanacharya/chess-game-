@@ -2,7 +2,6 @@ package com.chessapp.localclock.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -17,7 +16,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import com.chessapp.engine.Color as EngineColor
@@ -121,7 +123,23 @@ private fun SquareCell(
             Box(Modifier.fillMaxSize().background(BoardLastMove.copy(alpha = 0.45f)))
         }
         if (isCheck) {
-            Box(Modifier.fillMaxSize().background(BoardCheck.copy(alpha = 0.55f)))
+            // A radial red glow (lichess-style, mirrors web's .square-overlay.check) rather than a
+            // flat wash, so it can't be mistaken for the flat capture tint when both show at once.
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .drawBehind {
+                        val glow = BoardCheck.copy(alpha = 0.9f)
+                        drawRect(
+                            Brush.radialGradient(
+                                0f to glow, 0.3f to glow, 0.78f to Color.Transparent,
+                                center = center,
+                                // CSS's default "farthest-corner" radius: half the diagonal.
+                                radius = size.minDimension * 0.7071f
+                            )
+                        )
+                    }
+            )
         }
         if (isSelected) {
             Box(Modifier.fillMaxSize().background(BoardSelected.copy(alpha = 0.55f)))
@@ -135,11 +153,8 @@ private fun SquareCell(
                         .background(BoardLegalTarget.copy(alpha = 0.75f))
                 )
             } else {
-                Box(
-                    Modifier
-                        .fillMaxSize()
-                        .border(width = size * 0.08f, color = BoardCaptureTarget.copy(alpha = 0.85f))
-                )
+                // A soft red tint over the whole square marks a capturable enemy piece.
+                Box(Modifier.fillMaxSize().background(BoardCaptureTarget.copy(alpha = 0.4f)))
             }
         }
         piece?.let {

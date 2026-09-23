@@ -476,11 +476,28 @@
 
   // No WHITE/BLACK label: position (top/bottom, matching the board orientation) and the
   // captured-piece colors already say which clock is whose.
+  function clockText(color) {
+    return clock.isUnlimited() ? "--:--" : formatClockTime(clock.remainingMillis(color));
+  }
+
+  // Every segment of every digit position, drawn faintly behind the lit digits the way a real
+  // LCD shows its unlit segments. Same string shape as clockText, so the two line up exactly.
+  function lcdGhostText(text) {
+    return text.replace(/[0-9-]/g, "8");
+  }
+
   function renderClockPill(color) {
     var pill = el("div", clockPillClassName(color));
     pill.id = "clock-pill-" + color;
-    var timeEl = el("div", "clock-time", clock.isUnlimited() ? "∞" : formatClockTime(clock.remainingMillis(color)));
-    timeEl.id = "clock-time-" + color;
+    var text = clockText(color);
+    var timeEl = el("div", "clock-time");
+    var ghost = el("span", "clock-ghost", lcdGhostText(text));
+    ghost.id = "clock-ghost-" + color;
+    ghost.setAttribute("aria-hidden", "true");
+    var digits = el("span", "clock-digits", text);
+    digits.id = "clock-time-" + color;
+    timeEl.appendChild(ghost);
+    timeEl.appendChild(digits);
     pill.appendChild(timeEl);
     return pill;
   }
@@ -492,10 +509,13 @@
   function updateClockDisplays() {
     ["white", "black"].forEach(function (color) {
       var pill = document.getElementById("clock-pill-" + color);
-      var timeEl = document.getElementById("clock-time-" + color);
-      if (!pill || !timeEl) return;
+      var digits = document.getElementById("clock-time-" + color);
+      var ghost = document.getElementById("clock-ghost-" + color);
+      if (!pill || !digits || !ghost) return;
       pill.className = clockPillClassName(color);
-      timeEl.textContent = clock.isUnlimited() ? "∞" : formatClockTime(clock.remainingMillis(color));
+      var text = clockText(color);
+      digits.textContent = text;
+      ghost.textContent = lcdGhostText(text);
     });
   }
 
