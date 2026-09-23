@@ -162,5 +162,7 @@ The stale in-progress task list in the repo (Gradle scaffolding era) is
 outdated — bot integration is done on both platforms, not pending.
 
 Open items:
-- Android changes are unverified by an actual build/emulator run (sandbox
-  has no Android SDK) — do a real on-device check next session.
+- Android now compiles and unit-tests in CI (`ci.yml`), but nothing has been
+  *run* on a device/emulator or real phone browser yet. The full list of
+  what to check is tracked in issue #5 ("On-device verification
+  checklist") — add new unverified behavior there rather than here.
