@@ -19,7 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,8 +50,8 @@ fun GameScreen(
     onBackToSetup: () -> Unit
 ) {
     val uiState = viewModel.uiState
-    var showResignConfirm by remember { mutableStateOf(false) }
-    var showDrawOfferConfirm by remember { mutableStateOf(false) }
+    var showResignConfirm by rememberSaveable { mutableStateOf(false) }
+    var showDrawOfferConfirm by rememberSaveable { mutableStateOf(false) }
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -101,7 +101,11 @@ fun GameScreen(
                 contentAlignment = Alignment.Center
             ) {
                 ChessBoard(
-                    uiState = uiState,
+                    position = uiState.position,
+                    selectedSquare = uiState.selectedSquare,
+                    lastMove = uiState.summary.lastMove,
+                    kingInCheck = uiState.summary.kingInCheck,
+                    humanColor = uiState.humanColor,
                     onSquareTapped = viewModel::onSquareTapped,
                     modifier = Modifier.fillMaxSize()
                 )
@@ -247,8 +251,8 @@ private fun PlayerBar(
     modifier: Modifier = Modifier
 ) {
     val opponentColor = if (playerColor == Color.WHITE) Color.BLACK else Color.WHITE
-    val ownCaptures = uiState.capturedPieces(opponentColor) // pieces THIS player has captured
-    val advantage = uiState.materialAdvantage(playerColor)
+    val ownCaptures = uiState.summary.capturedPieces(opponentColor) // pieces THIS player has captured
+    val advantage = uiState.summary.materialAdvantage(playerColor)
     Row(
         modifier = modifier
             .fillMaxWidth()

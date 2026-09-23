@@ -19,6 +19,9 @@ interface BotSource {
      * should only call this when they've already confirmed a legal move exists.
      */
     suspend fun chooseMove(state: GameState): Move?
+
+    /** Releases anything this source holds onto (e.g. a WebView). Call from the main thread. */
+    fun close() {}
 }
 
 /** Always available, no network required: runs the bot bundled into this build at compile time. */

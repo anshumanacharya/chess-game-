@@ -52,6 +52,14 @@ class RemoteBotSource(
         }
     }
 
+    /** Destroys the hidden WebView (it would otherwise live as long as the process). Must run on
+     *  the main thread; a later [chooseMove] would simply create and load a fresh one. */
+    override fun close() {
+        webView?.destroy()
+        webView = null
+        ready = false
+    }
+
     /** Must run on the main thread — all WebView APIs require it. */
     private suspend fun ensureLoaded(): WebView? {
         val existing = webView

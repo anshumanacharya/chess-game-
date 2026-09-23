@@ -56,3 +56,6 @@ jobs:
       # GitHub's Ubuntu runners ship the Android SDK (ANDROID_HOME is preset), so no extra setup.
       - name: Build the debug APK
         run: ./gradlew :app:assembleDebug
+
+      - name: Android app unit tests (UI state and bot source selection)
+        run: ./gradlew :app:testDebugUnitTest

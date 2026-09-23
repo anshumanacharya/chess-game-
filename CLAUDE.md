@@ -28,8 +28,8 @@ claiming a build passed. Flag this caveat to the user whenever Android
 changes go out unverified by a real build.
 
 `.github/workflows/ci.yml` runs on every pull request: `:chess-engine:test`,
-`:web-engine:nodeTest`, and `:app:assembleDebug` (GitHub's runners have the
-Android SDK) — it's the only place Android actually gets compiled, so open a
+`:web-engine:nodeTest`, `:app:assembleDebug` and `:app:testDebugUnitTest`
+(GitHub's runners have the Android SDK) — it's the only place Android actually gets compiled, so open a
 PR and check it rather than claiming an Android change builds.
 
 To run the engine tests in this sandbox, build a scratch copy without `:app`
@@ -84,6 +84,13 @@ shared engine changed.
   glyphs: `web/pieces/*.svg` on web, hand-converted
   `app/src/main/res/drawable/piece_*.xml` VectorDrawables on Android
   (via `ui/components/PieceIcon.kt`'s `pieceIconRes()`).
+- Android UI state: everything derived from a position (status, last move,
+  king in check, captures, material) lives in `PositionSummary`, computed once
+  per move and shared by every `GameUiState.copy()` — the clock ticker copies
+  the state 10×/s, so don't add position-derived getters to `GameUiState`.
+  `ChessBoard` takes only board inputs (not the whole `GameUiState`) so ticks
+  skip redrawing it. Which screen shows is `GameViewModel.isInGame`, not
+  composition state, so it survives Activity recreation.
 - Board orientation: pass-and-play is fixed (White bottom/Black top) with
   pieces rotating 180° on Black's turn; playing the bot as Black instead
   *flips the board* (like lichess/chess.com) so the human's pieces stay at
