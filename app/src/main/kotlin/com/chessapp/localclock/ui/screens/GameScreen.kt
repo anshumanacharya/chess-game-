@@ -248,8 +248,7 @@ private fun PlayerBar(
 ) {
     val opponentColor = if (playerColor == Color.WHITE) Color.BLACK else Color.WHITE
     val ownCaptures = uiState.capturedPieces(opponentColor) // pieces THIS player has captured
-    val theirCaptures = uiState.capturedPieces(playerColor) // pieces captured from this player
-    val advantage = materialValue(ownCaptures) - materialValue(theirCaptures)
+    val advantage = uiState.materialAdvantage(playerColor)
     Row(
         modifier = modifier
             .fillMaxWidth()

@@ -27,6 +27,18 @@ VectorDrawable `pathData` against source SVGs char-for-char) rather than
 claiming a build passed. Flag this caveat to the user whenever Android
 changes go out unverified by a real build.
 
+`.github/workflows/ci.yml` runs on every pull request: `:chess-engine:test`,
+`:web-engine:nodeTest`, and `:app:assembleDebug` (GitHub's runners have the
+Android SDK) — it's the only place Android actually gets compiled, so open a
+PR and check it rather than claiming an Android change builds.
+
+To run the engine tests in this sandbox, build a scratch copy without `:app`
+and the AGP/compose plugin lines (`dl.google.com` is blocked, and Gradle
+resolves every plugin in the root `plugins {}` block even when unused), and
+drop `google()` from its settings. Maven Central sometimes answers 429 here;
+`--max-workers=1 -Dorg.gradle.internal.repository.max.tentatives=12
+-Dorg.gradle.internal.repository.initial.backoff=3000` rides it out.
+
 `web/index.html` works standalone (the compiled engine is checked in).
 Pushing to `main` auto-deploys the web build via `.github/workflows/deploy-pages.yml`
 — but its `paths` filter only covers `chess-engine/**`, `web-engine/**`,

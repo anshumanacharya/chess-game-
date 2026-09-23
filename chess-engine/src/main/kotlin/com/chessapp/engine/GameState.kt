@@ -18,13 +18,17 @@ data class GameState(
     val positionCounts: Map<String, Int> = emptyMap()
 ) {
     companion object {
-        fun newGame(): GameState = GameState(
-            board = Board.initialPosition(),
-            sideToMove = Color.WHITE,
-            castlingRights = CastlingRights(),
-            enPassantTarget = null,
-            halfMoveClock = 0,
-            fullMoveNumber = 1
-        )
+        fun newGame(): GameState {
+            val start = GameState(
+                board = Board.initialPosition(),
+                sideToMove = Color.WHITE,
+                castlingRights = CastlingRights(),
+                enPassantTarget = null,
+                halfMoveClock = 0,
+                fullMoveNumber = 1
+            )
+            // The starting position is its own first occurrence for threefold repetition.
+            return start.copy(positionCounts = mapOf(MoveGenerator.positionKey(start) to 1))
+        }
     }
 }

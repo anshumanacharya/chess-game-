@@ -19,19 +19,9 @@ import com.chessapp.engine.Color
 import com.chessapp.engine.PieceType
 import com.chessapp.localclock.ui.theme.BoardLightSquare
 
-fun pieceValue(type: PieceType): Int = when (type) {
-    PieceType.QUEEN -> 9
-    PieceType.ROOK -> 5
-    PieceType.BISHOP -> 3
-    PieceType.KNIGHT -> 3
-    PieceType.PAWN -> 1
-    PieceType.KING -> 0
-}
-
-fun materialValue(captured: List<PieceType>): Int = captured.sumOf(::pieceValue)
-
-/** Shows the icons of pieces of [color] that have been captured (highest value first), and the
- *  classic +N material-advantage count when [advantage] is positive. */
+/** Shows the icons of pieces of [color] that have been captured (in the order given — the
+ *  engine's `capturedPieces` lists them most valuable first), and the classic +N
+ *  material-advantage count when [advantage] is positive. */
 @Composable
 fun CapturedPiecesRow(captured: List<PieceType>, color: Color, advantage: Int = 0, modifier: Modifier = Modifier) {
     Row(
@@ -48,7 +38,7 @@ fun CapturedPiecesRow(captured: List<PieceType>, color: Color, advantage: Int = 
                     .padding(horizontal = 4.dp, vertical = 2.dp),
                 horizontalArrangement = Arrangement.spacedBy(2.dp)
             ) {
-                for (type in captured.sortedByDescending(::pieceValue)) {
+                for (type in captured) {
                     Image(
                         painter = painterResource(id = pieceIconRes(type, color)),
                         contentDescription = null,

@@ -13,6 +13,8 @@ import com.chessapp.engine.Move
 import com.chessapp.engine.MoveGenerator
 import com.chessapp.engine.PieceType
 import com.chessapp.engine.Square
+import com.chessapp.engine.capturedPieces
+import com.chessapp.engine.materialAdvantage
 
 /**
  * A small, JS-ergonomic facade over the shared chess-engine rules and clock, used only by the
@@ -152,26 +154,12 @@ class JsGame {
         return JsSquare(square.file, square.rank, "king", colorToString(state.sideToMove))
     }
 
-    fun capturedPieces(color: String): Array<String> {
-        val target = colorFromString(color)
-        val startCounts = linkedMapOf("queen" to 1, "rook" to 2, "bishop" to 2, "knight" to 2, "pawn" to 8)
-        val onBoard = HashMap<String, Int>()
-        for (file in 0..7) {
-            for (rank in 0..7) {
-                val piece = state.board.pieceAt(Square(file, rank))
-                if (piece != null && piece.color == target && piece.type != PieceType.KING) {
-                    val key = pieceTypeToString(piece.type)
-                    onBoard[key] = (onBoard[key] ?: 0) + 1
-                }
-            }
-        }
-        val captured = ArrayList<String>()
-        for ((type, startCount) in startCounts) {
-            val remaining = onBoard[type] ?: 0
-            repeat((startCount - remaining).coerceAtLeast(0)) { captured.add(type) }
-        }
-        return captured.toTypedArray()
-    }
+    /** Pieces of `color` captured by the opponent, most valuable first. */
+    fun capturedPieces(color: String): Array<String> =
+        state.capturedPieces(colorFromString(color)).map(::pieceTypeToString).toTypedArray()
+
+    /** `color`'s material minus the opponent's, from the pieces on the board (the "+N" count). */
+    fun materialAdvantage(color: String): Int = state.materialAdvantage(colorFromString(color))
 }
 
 @JsExport
