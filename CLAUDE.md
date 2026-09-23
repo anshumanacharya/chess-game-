@@ -78,8 +78,16 @@ shared engine changed.
   keep these two in sync by hex value when changing board theme.
   Current theme: lichess.org's default ("brown") board
   (`#F0D9B5`/`#B58863`), dark near-black legal-move dot (`#141E0A`) on empty
-  squares; a red frame around the square (`#D13B2F`, `BoardCaptureTarget` /
-  `--capture-target`) marks a capturable piece, since a dot/ring hides behind the artwork.
+  squares; a soft flat red tint over the square (`#E8321E` at 40%,
+  `BoardCaptureTarget` / `--capture-target`) marks a capturable piece, since a
+  dot/ring hides behind the artwork; the king in check gets a *radial* red glow
+  (lichess-style) so the two red cues stay distinct when both show at once.
+- Clocks are red seven-segment LCD panels on both platforms (DSEG7 Classic,
+  SIL OFL — `web/fonts/`, `app/src/main/res/font/`): lit + glow when running,
+  dim when waiting, blinking when flagged, faint "88:88" unlit segments
+  behind the digits (`lcdGhostText` in both `app.js` and `ClockDisplay.kt` keeps the two layers the
+  same shape). Unlimited time shows `--:--` (the font has no ∞). Colors
+  `LcdPanel`/`LcdLit`/… mirror `--lcd-*`.
 - Pieces render as real Cburnett artwork on both platforms, not Unicode
   glyphs: `web/pieces/*.svg` on web, hand-converted
   `app/src/main/res/drawable/piece_*.xml` VectorDrawables on Android
@@ -162,5 +170,7 @@ The stale in-progress task list in the repo (Gradle scaffolding era) is
 outdated — bot integration is done on both platforms, not pending.
 
 Open items:
-- Android changes are unverified by an actual build/emulator run (sandbox
-  has no Android SDK) — do a real on-device check next session.
+- Android now compiles and unit-tests in CI (`ci.yml`), but nothing has been
+  *run* on a device/emulator or real phone browser yet. The full list of
+  what to check is tracked in issue #5 ("On-device verification
+  checklist") — add new unverified behavior there rather than here.
