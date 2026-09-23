@@ -7,10 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.chessapp.engine.ClockConfig
@@ -33,26 +29,23 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private sealed class Screen {
-    data object Setup : Screen()
-    data object Game : Screen()
-}
-
 @Composable
 private fun ChessApp() {
-    var screen by remember { mutableStateOf<Screen>(Screen.Setup) }
     val viewModel: GameViewModel = viewModel()
 
-    when (screen) {
-        is Screen.Setup -> SetupScreen(
+    // Which screen shows is the ViewModel's call, not a `remember`ed flag here: the Activity is
+    // recreated on some configuration changes (switching dark mode, for one), which would reset
+    // a flag held in composition back to Setup mid-game while the game itself kept running.
+    if (viewModel.isInGame) {
+        GameScreen(
+            viewModel = viewModel,
+            onBackToSetup = viewModel::leaveGame
+        )
+    } else {
+        SetupScreen(
             onStartGame = { config: ClockConfig, botColor: Color? ->
                 viewModel.startNewGame(config, botColor)
-                screen = Screen.Game
             }
-        )
-        is Screen.Game -> GameScreen(
-            viewModel = viewModel,
-            onBackToSetup = { screen = Screen.Setup }
         )
     }
 }

@@ -30,7 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,13 +47,15 @@ private enum class Opponent { HUMAN, COMPUTER }
 fun SetupScreen(
     onStartGame: (clockConfig: ClockConfig, botColor: Color?) -> Unit
 ) {
-    var clockMode by remember { mutableStateOf(ClockMode.TIMED) }
-    var selectedPresetIndex by remember { mutableStateOf(3) } // "10 min"
-    var useCustom by remember { mutableStateOf(false) }
-    var customMinutes by remember { mutableIntStateOf(15) }
-    var customIncrement by remember { mutableIntStateOf(0) }
-    var opponent by remember { mutableStateOf(Opponent.HUMAN) }
-    var humanPlaysWhite by remember { mutableStateOf(true) }
+    // rememberSaveable (not remember): survives the Activity being recreated, e.g. by a dark
+    // mode switch, instead of silently resetting the player's choices.
+    var clockMode by rememberSaveable { mutableStateOf(ClockMode.TIMED) }
+    var selectedPresetIndex by rememberSaveable { mutableIntStateOf(3) } // "10 min"
+    var useCustom by rememberSaveable { mutableStateOf(false) }
+    var customMinutes by rememberSaveable { mutableIntStateOf(15) }
+    var customIncrement by rememberSaveable { mutableIntStateOf(0) }
+    var opponent by rememberSaveable { mutableStateOf(Opponent.HUMAN) }
+    var humanPlaysWhite by rememberSaveable { mutableStateOf(true) }
 
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
     Column(

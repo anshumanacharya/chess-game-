@@ -27,4 +27,10 @@ class BotStrategy(
         }
         return BotMoveResult(local.chooseMove(state), BotMoveOrigin.LOCAL)
     }
+
+    /** Releases both sources; call once the owner (the game's ViewModel) is done with them. */
+    fun close() {
+        local.close()
+        remote?.close()
+    }
 }

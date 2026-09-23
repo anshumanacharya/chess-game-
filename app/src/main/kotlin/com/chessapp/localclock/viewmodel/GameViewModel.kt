@@ -1,6 +1,7 @@
 package com.chessapp.localclock.viewmodel
 
 import android.app.Application
+import android.os.SystemClock
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -11,7 +12,6 @@ import com.chessapp.engine.ClockState
 import com.chessapp.engine.Color
 import com.chessapp.engine.GameStatus
 import com.chessapp.engine.Move
-import com.chessapp.engine.MoveGenerator
 import com.chessapp.engine.PieceType
 import com.chessapp.engine.Square
 import com.chessapp.localclock.bot.AndroidConnectivityChecker
@@ -50,6 +50,14 @@ class GameViewModel @JvmOverloads constructor(
     var uiState by mutableStateOf(GameUiState())
         private set
 
+    /**
+     * Whether the game screen (rather than setup) should show. Lives here, not in the UI's own
+     * `remember`ed state, so it survives the Activity being recreated (e.g. switching dark mode)
+     * exactly as long as the game it describes does — the two can't disagree.
+     */
+    var isInGame by mutableStateOf(false)
+        private set
+
     private var tickerJob: Job? = null
     private var botMoveJob: Job? = null
     private var lastClockConfig: ClockConfig = ClockConfig.UNLIMITED
@@ -60,8 +68,9 @@ class GameViewModel @JvmOverloads constructor(
         botMoveJob?.cancel()
         lastClockConfig = clockConfig
         lastBotColor = botColor
+        isInGame = true
         uiState = GameUiState(
-            position = gameSource.newGame(),
+            summary = PositionSummary(gameSource.newGame()),
             clock = ClockState.from(clockConfig).start(Color.WHITE),
             botColor = botColor
         )
@@ -71,13 +80,23 @@ class GameViewModel @JvmOverloads constructor(
 
     fun rematch() = startNewGame(lastClockConfig, lastBotColor)
 
+    /** Back to setup: stops this game's clock and any pending bot move, which would otherwise
+     *  keep running unseen behind the setup screen. */
+    fun leaveGame() {
+        tickerJob?.cancel()
+        botMoveJob?.cancel()
+        isInGame = false
+    }
+
     private fun startTicker() {
         tickerJob?.cancel()
         tickerJob = viewModelScope.launch {
-            var lastTick = System.currentTimeMillis()
+            // Monotonic, unlike System.currentTimeMillis(): a wall-clock adjustment (network
+            // time sync, the user changing the time) can't add or remove time from a clock.
+            var lastTick = SystemClock.elapsedRealtime()
             while (isActive) {
                 delay(TICK_MS)
-                val now = System.currentTimeMillis()
+                val now = SystemClock.elapsedRealtime()
                 val elapsed = now - lastTick
                 lastTick = now
                 if (uiState.isGameOver) break
@@ -97,9 +116,12 @@ class GameViewModel @JvmOverloads constructor(
         tickerJob?.cancel()
     }
 
-    /** Resume ticking after [pauseClock], if the game is still on and has a real time control. */
+    /** Resume ticking after [pauseClock], if a game is on and has a real time control. Doesn't
+     *  require an active clock side: the bot's clock is briefly paused while it fetches a move
+     *  (see [maybeTriggerBotMove]), and a ticker left stopped then would freeze the clock once
+     *  the bot's side is restarted. Ticking a paused clock is a no-op. */
     fun resumeClock() {
-        if (!uiState.isGameOver && !uiState.clock.isUnlimited && uiState.clock.activeColor != null) {
+        if (isInGame && !uiState.isGameOver && !uiState.clock.isUnlimited) {
             startTicker()
         }
     }
@@ -153,18 +175,18 @@ class GameViewModel @JvmOverloads constructor(
     private fun applyMove(move: Move) {
         val state = uiState
         val movedColor = state.position.sideToMove
-        val newPosition = gameSource.applyMove(state.position, move)
-        val nextColor = newPosition.sideToMove
+        val newSummary = PositionSummary(gameSource.applyMove(state.position, move))
+        val nextColor = newSummary.position.sideToMove
         val newClock = state.clock.onMoveCompleted(movedColor, nextColor)
 
         uiState = state.copy(
-            position = newPosition,
+            summary = newSummary,
             selectedSquare = null,
             pendingPromotion = null,
             clock = newClock
         )
 
-        when (MoveGenerator.status(newPosition)) {
+        when (newSummary.status) {
             GameStatus.CHECKMATE -> endGame(GameOverReason.CHECKMATE)
             GameStatus.STALEMATE -> endGame(GameOverReason.STALEMATE)
             GameStatus.DRAW_FIFTY_MOVE -> endGame(GameOverReason.DRAW_FIFTY_MOVE)
@@ -180,6 +202,11 @@ class GameViewModel @JvmOverloads constructor(
      * so its reply doesn't feel instantaneous, then applies it exactly like a human move.
      * Re-checks [GameUiState.isBotTurn] after the delay/search in case the game ended (e.g. the
      * human resigned) while it was "thinking".
+     *
+     * The bot's clock runs during that fixed delay, but is paused while the move is actually
+     * fetched: the online source can wait up to its timeout on a slow network (and loads the
+     * whole engine on its first call), and charging the bot for that would make a timed game
+     * depend on connection speed rather than play.
      */
     private fun maybeTriggerBotMove() {
         if (!uiState.isBotTurn) return
@@ -188,7 +215,17 @@ class GameViewModel @JvmOverloads constructor(
         botMoveJob = viewModelScope.launch {
             delay(BOT_MOVE_DELAY_MS)
             val position = uiState.position
-            val result = botStrategy.chooseMove(position)
+            val botColor = position.sideToMove
+            uiState = uiState.copy(clock = uiState.clock.pause())
+            val result = try {
+                botStrategy.chooseMove(position)
+            } finally {
+                // Hand the clock back even if this job was cancelled mid-fetch (resign, new game),
+                // unless the game has since ended — a finished game's clock stays stopped.
+                if (!uiState.isGameOver && uiState.position === position) {
+                    uiState = uiState.copy(clock = uiState.clock.start(botColor))
+                }
+            }
             if (!uiState.isBotTurn || uiState.position !== position) return@launch
             uiState = uiState.copy(isBotThinking = false, lastBotMoveWasOffline = result.origin == BotMoveOrigin.LOCAL)
             if (result.move != null) applyMove(result.move)
@@ -217,6 +254,7 @@ class GameViewModel @JvmOverloads constructor(
     override fun onCleared() {
         tickerJob?.cancel()
         botMoveJob?.cancel()
+        botStrategy.close()
     }
 
     companion object {

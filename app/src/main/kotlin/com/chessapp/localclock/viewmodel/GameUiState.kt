@@ -28,8 +28,38 @@ enum class GameOverReason {
 /** A pawn reached the last rank: user must pick which piece it becomes before the move is applied. */
 data class PendingPromotion(val from: Square, val to: Square, val options: List<Move>)
 
+/**
+ * Everything the UI derives from a position alone — status, last move, the king in check,
+ * captured pieces and material — computed once when the position changes. [GameUiState] is
+ * copied ten times a second by the clock ticker; keeping these in one object that each copy
+ * shares (instead of getters on [GameUiState]) means a tick recomputes none of them, and lets
+ * composables that only read the position skip recomposing on a tick at all.
+ *
+ * These read pure, already-committed board state to drive display, so they call the engine
+ * directly regardless of which GameSource produced [position] — only GameViewModel's actual move
+ * submission path goes through GameSource, since that's the part a future online source needs
+ * to intercept.
+ */
+class PositionSummary(val position: GameState) {
+    val status: GameStatus = MoveGenerator.status(position)
+    val lastMove: Move? = position.moveHistory.lastOrNull()
+
+    /** The side to move's king, when it's in check (or mated); null otherwise. */
+    val kingInCheck: Square? =
+        if (status == GameStatus.CHECK || status == GameStatus.CHECKMATE) position.board.findKing(position.sideToMove) else null
+
+    private val captured: Map<Color, List<PieceType>> = Color.entries.associateWith { position.capturedPieces(it) }
+    private val whiteMaterialAdvantage: Int = position.materialAdvantage(Color.WHITE)
+
+    /** Pieces of [color] captured by the opponent, most valuable first. */
+    fun capturedPieces(color: Color): List<PieceType> = captured.getValue(color)
+
+    /** [color]'s material minus the opponent's (the "+N" count). */
+    fun materialAdvantage(color: Color): Int = if (color == Color.WHITE) whiteMaterialAdvantage else -whiteMaterialAdvantage
+}
+
 data class GameUiState(
-    val position: GameState = GameState.newGame(),
+    val summary: PositionSummary = PositionSummary(GameState.newGame()),
     val clock: ClockState = ClockState.from(ClockConfig.UNLIMITED),
     val selectedSquare: Square? = null,
     val pendingPromotion: PendingPromotion? = null,
@@ -42,16 +72,8 @@ data class GameUiState(
      *  Meaningless (and unused) outside a vs-bot game. */
     val lastBotMoveWasOffline: Boolean = false
 ) {
-    // These read pure, already-committed board state to drive display (status text, highlighted
-    // legal-move dots) rather than committing anything, so they call MoveGenerator directly
-    // regardless of which GameSource produced `position` — only GameViewModel's actual move
-    // submission path goes through GameSource, since that's the part a future online source
-    // needs to intercept.
-    val status: GameStatus get() = MoveGenerator.status(position)
-    val lastMove: Move? get() = position.moveHistory.lastOrNull()
-
-    val legalMovesForSelected: List<Move>
-        get() = selectedSquare?.let { MoveGenerator.legalMovesFrom(position, it) } ?: emptyList()
+    val position: GameState get() = summary.position
+    val status: GameStatus get() = summary.status
 
     val isGameOver: Boolean get() = gameOverReason != null
 
@@ -68,8 +90,4 @@ data class GameUiState(
             GameOverReason.BLACK_TIME_OUT, GameOverReason.BLACK_RESIGNED -> Color.WHITE
             else -> null
         }
-
-    fun capturedPieces(color: Color): List<PieceType> = position.capturedPieces(color)
-
-    fun materialAdvantage(color: Color): Int = position.materialAdvantage(color)
 }

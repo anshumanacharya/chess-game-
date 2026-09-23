@@ -21,7 +21,9 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import com.chessapp.engine.Color as EngineColor
-import com.chessapp.engine.GameStatus
+import com.chessapp.engine.GameState
+import com.chessapp.engine.Move
+import com.chessapp.engine.MoveGenerator
 import com.chessapp.engine.Piece
 import com.chessapp.engine.Square
 import com.chessapp.localclock.ui.theme.BoardCaptureTarget
@@ -31,7 +33,6 @@ import com.chessapp.localclock.ui.theme.BoardLastMove
 import com.chessapp.localclock.ui.theme.BoardLegalTarget
 import com.chessapp.localclock.ui.theme.BoardLightSquare
 import com.chessapp.localclock.ui.theme.BoardSelected
-import com.chessapp.localclock.viewmodel.GameUiState
 
 /**
  * Renders the 8x8 board. In pass-and-play it's in a fixed orientation (White at the bottom,
@@ -45,21 +46,24 @@ import com.chessapp.localclock.viewmodel.GameUiState
  */
 @Composable
 fun ChessBoard(
-    uiState: GameUiState,
+    position: GameState,
+    selectedSquare: Square?,
+    lastMove: Move?,
+    kingInCheck: Square?,
+    /** The human's color against the bot (fixes the seat and flips the board for Black); null in pass-and-play. */
+    humanColor: EngineColor?,
     onSquareTapped: (Square) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val pos = uiState.position
-    val legalTargets = remember(uiState.selectedSquare, pos) {
-        uiState.legalMovesForSelected.map { it.to }.toSet()
+    // Takes only what the board draws (not the whole GameUiState), so a clock tick — which
+    // changes nothing here — lets Compose skip redrawing all 64 squares.
+    val pos = position
+    val legalTargets = remember(selectedSquare, pos) {
+        selectedSquare?.let { from -> MoveGenerator.legalMovesFrom(pos, from).map { it.to }.toSet() } ?: emptySet()
     }
-    val kingInCheckSquare = if (uiState.status == GameStatus.CHECK || uiState.status == GameStatus.CHECKMATE) {
-        pos.board.findKing(pos.sideToMove)
-    } else null
-    val fixedSeat = uiState.humanColor
-    val boardFlipped = fixedSeat == EngineColor.BLACK
+    val boardFlipped = humanColor == EngineColor.BLACK
     val pieceRotationDegrees = when {
-        fixedSeat != null -> 0f
+        humanColor != null -> 0f
         pos.sideToMove == EngineColor.BLACK -> 180f
         else -> 0f
     }
@@ -80,10 +84,10 @@ fun ChessBoard(
                             isLight = (file + rank) % 2 == 1,
                             piece = piece,
                             pieceRotationDegrees = pieceRotationDegrees,
-                            isSelected = uiState.selectedSquare == square,
+                            isSelected = selectedSquare == square,
                             isLegalTarget = square in legalTargets,
-                            isLastMove = uiState.lastMove?.let { it.from == square || it.to == square } == true,
-                            isCheck = square == kingInCheckSquare,
+                            isLastMove = lastMove?.let { it.from == square || it.to == square } == true,
+                            isCheck = square == kingInCheck,
                             onClick = { onSquareTapped(square) }
                         )
                     }
