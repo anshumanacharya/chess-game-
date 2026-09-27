@@ -232,6 +232,23 @@ class GameViewModel @JvmOverloads constructor(
         }
     }
 
+    /**
+     * Undoes the last move (pass-and-play only, see [GameUiState.canTakeback]): the clock hands
+     * back to whoever's turn it now is, but — deliberately, to keep this simple — any increment
+     * that move earned isn't clawed back and elapsed thinking time isn't refunded.
+     */
+    fun takeback() {
+        if (!uiState.canTakeback) return
+        val state = uiState
+        val newSummary = PositionSummary(gameSource.undoLastMove(state.position))
+        uiState = state.copy(
+            summary = newSummary,
+            selectedSquare = null,
+            pendingPromotion = null,
+            clock = state.clock.start(newSummary.position.sideToMove)
+        )
+    }
+
     fun resign(color: Color) {
         endGame(if (color == Color.WHITE) GameOverReason.WHITE_RESIGNED else GameOverReason.BLACK_RESIGNED)
     }

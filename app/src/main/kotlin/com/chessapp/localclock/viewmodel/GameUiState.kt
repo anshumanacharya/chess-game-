@@ -82,6 +82,11 @@ data class GameUiState(
 
     val isBotTurn: Boolean get() = botColor != null && botColor == position.sideToMove && !isGameOver
 
+    /** Takeback is pass-and-play only (see [GameSource.undoLastMove][com.chessapp.localclock.game.GameSource.undoLastMove]):
+     *  undoing just the bot's last move would only hand the turn back to it, which would
+     *  immediately move again rather than let a human retry anything. */
+    val canTakeback: Boolean get() = botColor == null && !isGameOver && position.moveHistory.isNotEmpty()
+
     /** null means the game ended in a draw. */
     val winner: Color?
         get() = when (gameOverReason) {

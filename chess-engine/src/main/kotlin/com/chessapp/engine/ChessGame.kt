@@ -37,4 +37,11 @@ class ChessGame(initialState: GameState = GameState.newGame()) {
     fun reset() {
         state = GameState.newGame()
     }
+
+    /** Undoes the most recent move (a "takeback"); returns whether one was actually undone. */
+    fun undoLastMove(): Boolean {
+        if (state.moveHistory.isEmpty()) return false
+        state = MoveGenerator.undoLastMove(state)
+        return true
+    }
 }

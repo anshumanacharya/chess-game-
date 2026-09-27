@@ -394,6 +394,25 @@
     endGame(color === "white" ? "white_resigned" : "black_resigned");
   }
 
+  // Pass-and-play only: undoing just the bot's last move would only hand the turn back to it,
+  // which would immediately move again rather than let a human retry anything (mirrors
+  // GameUiState.canTakeback on Android).
+  function canTakeback() {
+    return !gameOverReason && !currentBotColor && moveLog.length > 0;
+  }
+
+  // Deliberately doesn't claw back any increment the undone move earned or refund elapsed
+  // thinking time — the clock just hands back to whoever's turn it now is.
+  function takeback() {
+    if (!canTakeback()) return;
+    game.undoLastMove();
+    moveLog.pop();
+    selected = null;
+    pendingPromotion = null;
+    clock.start(game.sideToMove());
+    render();
+  }
+
   // The human's color when playing against the bot; null in pass-and-play.
   function humanColor() {
     if (!currentBotColor) return null;
@@ -668,6 +687,11 @@
       movesList.appendChild(row);
     });
     middle.appendChild(movesList);
+
+    var takebackButton = el("button", "outlined-button", "Takeback");
+    takebackButton.disabled = !canTakeback();
+    takebackButton.addEventListener("click", takeback);
+    middle.appendChild(takebackButton);
 
     var buttonRow = el("div", "button-row");
 

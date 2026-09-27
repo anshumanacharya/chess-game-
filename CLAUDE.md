@@ -27,6 +27,22 @@ VectorDrawable `pathData` against source SVGs char-for-char) rather than
 claiming a build passed. Flag this caveat to the user whenever Android
 changes go out unverified by a real build.
 
+Some sandboxes (e.g. a bare Windows desktop session) have no JDK at all, not
+just a blocked Android SDK — `./gradlew` fails immediately with "JAVA_HOME is
+not set". Check `java -version` first. If there's a working package manager
+and outbound network access (check with e.g. `winget search
+Microsoft.OpenJDK`; this differs from the `dl.google.com`/lichess block
+above, which is specific to certain cloud sandboxes, not this one), installing
+one (`winget install --id Microsoft.OpenJDK.17 -e --accept-package-agreements
+--accept-source-agreements --silent`, then `JAVA_HOME`/`PATH` pointing at
+`C:\Program Files\Microsoft\jdk-<version>\bin`) is worth doing before falling
+back to manual read-through — it's what actually let engine tests and the web
+bundle rebuild run and get verified in a browser this session. If installing
+isn't possible or desired, every Gradle-dependent verification (engine tests,
+rebuilding `web/chess-engine.js` below) has to wait for CI or a real dev
+machine, and that gap must be flagged to the user rather than silently
+skipped.
+
 `.github/workflows/ci.yml` runs on every pull request: `:chess-engine:test`,
 `:web-engine:nodeTest`, `:app:assembleDebug` and `:app:testDebugUnitTest`
 (GitHub's runners have the Android SDK) — it's the only place Android actually gets compiled, so open a
@@ -150,6 +166,44 @@ shared engine changed.
 ## Current State & Next Steps
 
 Completed this session:
+- Added a takeback button: undoes the last move and hands the turn back to
+  whoever made it. **Pass-and-play only** (deliberately, per the user) —
+  vs-bot games don't show the button, since undoing just the bot's move
+  would only hand the turn back to it, which would instantly move again
+  rather than let the human retry anything.
+  - Engine: `MoveGenerator.undoLastMove(state)` replays `moveHistory` minus
+    its last move from `GameState.newGame()` (correct castling
+    rights/en-passant/repetition-count bookkeeping for free, since it's just
+    `applyMove` again); `ChessGame.undoLastMove()` wraps it for the JVM
+    tests. Unit tests added to `ChessGameTest.kt`.
+  - Android: `GameSource.undoLastMove` (through `LocalGameSource`) →
+    `GameViewModel.takeback()` → a `GameUiState.canTakeback`-gated
+    "Takeback" button in `GameScreen.kt`, next to Offer draw/Resign. Clock
+    hands back to the post-undo side to move (`ClockState.start`) but
+    doesn't claw back increment or refund thinking time — deliberate, to
+    keep this simple.
+  - Web: `JsApi.kt`'s `JsGame.undoLastMove()` mirrors the same thing;
+    `app.js`'s `takeback()`/`canTakeback()` also pop `app.js`'s own
+    `moveLog` (the engine facade only exposes the latest move, so the
+    numbered move list is tracked separately — see the comment on
+    `moveHistoryPairs()`). Unit tests added to `JsApiTest.kt`.
+  - Verified locally after installing a JDK (`winget install Microsoft.OpenJDK.17`
+    — this sandbox had none at all, see the Gotchas note above): `:chess-engine:test`
+    (19 tests, including the 4 new `undoLastMove` ones) and `:web-engine:nodeTest`
+    both pass; `web/chess-engine.js` was rebuilt via
+    `:web-engine:browserProductionWebpack` and re-copied in, so the web build
+    now actually exposes `undoLastMove`. Also click-tested the web build in a
+    real browser: repeated takeback in pass-and-play correctly unwinds the
+    board/move-list/clock-orientation move by move back to the start; in a
+    vs-bot game the button renders but stays disabled (same convention as
+    "Offer draw") and a real click on it is a no-op — the bot's own move flow
+    (auto-reply after the human's move) is unaffected.
+  - Android's side of this (the same `GameViewModel.takeback()` /
+    `GameUiState.canTakeback` logic) is still unverified on-device — it
+    compiles by manual read-through only; add it to issue #5 if it isn't
+    covered by `:app:testDebugUnitTest` already.
+
+Previously completed:
 - Fixed poor-contrast legal-move dots and adopted lichess's default board
   colors on both web and Android.
 - Ported the recent web-only visual redesign to Android: real Cburnett piece
@@ -159,7 +213,7 @@ Completed this session:
 - Updated README credits to cover both platforms' artwork.
 - Pushed to `main` (commit `5efc0ee`); `deploy-pages.yml` ran and succeeded.
 
-Bot wiring (confirmed complete this session): `chess-bot` submodule has
+Bot wiring (confirmed complete): `chess-bot` submodule has
 `ChessBot`/`Evaluator`/`TwoPlySearch`/`PieceValues`/`BotConfig` + unit tests,
 pulled in as a source dir (not a compiled dep) by both `app/` and
 `web-engine/`. Android: `SetupScreen` → `GameViewModel` →

@@ -241,6 +241,57 @@ class ChessGameTest {
     }
 
     @Test
+    fun `undoLastMove reverts board, side to move and move history by one ply`() {
+        val game = ChessGame()
+        game.play("e2", "e4")
+        val afterE4 = game.state
+        game.play("e7", "e5")
+
+        assertTrue(game.undoLastMove())
+        assertEquals(MoveGenerator.positionKey(afterE4), MoveGenerator.positionKey(game.state))
+        assertEquals(Color.BLACK, game.sideToMove)
+        assertEquals(1, game.moveHistory.size)
+        assertEquals(afterE4.moveHistory, game.moveHistory)
+    }
+
+    @Test
+    fun `undoLastMove restores castling rights and en-passant eligibility lost by the undone move`() {
+        val game = ChessGame()
+        game.play("e2", "e4")
+        game.play("a7", "a6")
+        game.play("e4", "e5") // white pawn now on e5
+        val beforeDoublePush = game.state
+        game.play("d7", "d5") // black double pawn push: creates an e.p. target and is itself undone below
+
+        assertTrue(game.undoLastMove())
+        assertEquals(beforeDoublePush.enPassantTarget, game.state.enPassantTarget)
+        assertNull(game.state.enPassantTarget)
+    }
+
+    @Test
+    fun `undoLastMove on the starting position is a no-op that reports failure`() {
+        val game = ChessGame()
+        assertFalse(game.undoLastMove())
+        assertEquals(MoveGenerator.positionKey(GameState.newGame()), MoveGenerator.positionKey(game.state))
+    }
+
+    @Test
+    fun `repeated undoLastMove can unwind an entire game back to the start`() {
+        val game = ChessGame()
+        game.play("f2", "f3")
+        game.play("e7", "e5")
+        game.play("g2", "g4")
+        game.play("d8", "h4") // fool's mate: checkmate
+        assertEquals(GameStatus.CHECKMATE, game.status())
+
+        repeat(4) { assertTrue(game.undoLastMove()) }
+        assertTrue(game.moveHistory.isEmpty())
+        assertEquals(MoveGenerator.positionKey(GameState.newGame()), MoveGenerator.positionKey(game.state))
+        assertEquals(GameStatus.ONGOING, game.status())
+        assertFalse(game.undoLastMove())
+    }
+
+    @Test
     fun `moving into check is rejected as illegal`() {
         val board = Board.empty()
         board.setPiece(Square.fromAlgebraic("e1"), Piece(Color.WHITE, PieceType.KING))

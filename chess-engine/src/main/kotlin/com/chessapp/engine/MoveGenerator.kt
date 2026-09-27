@@ -294,6 +294,21 @@ object MoveGenerator {
         return newState
     }
 
+    /**
+     * Reverts the most recent move (a "takeback") by replaying [state]'s move history minus its
+     * last move from a fresh starting position — cheaper to write correctly than un-doing castling
+     * rights / en-passant / repetition-count bookkeeping in place, and move lists are short enough
+     * that the replay cost doesn't matter. Returns [state] unchanged if no move has been made yet.
+     */
+    fun undoLastMove(state: GameState): GameState {
+        if (state.moveHistory.isEmpty()) return state
+        var replayed = GameState.newGame()
+        for (move in state.moveHistory.dropLast(1)) {
+            replayed = applyMove(replayed, move)
+        }
+        return replayed
+    }
+
     /** Moves the piece(s) involved in [move] on [board] in place: removes any captured piece
      *  (including en passant's), applies a promotion, and relocates the rook when castling. */
     private fun movePieces(board: Board, move: Move) {

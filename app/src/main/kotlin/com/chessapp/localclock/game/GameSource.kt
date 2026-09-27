@@ -29,6 +29,14 @@ interface GameSource {
      * from the opponent.
      */
     fun applyMove(state: GameState, move: Move): GameState
+
+    /**
+     * Reverts the most recent move ("takeback"), returning [state] unchanged if there is none to
+     * undo. Local pass-and-play can always do this instantly; a network source may not support it
+     * at all (e.g. it would need the opponent's agreement) — [GameViewModel][com.chessapp.localclock.viewmodel.GameViewModel]
+     * only offers takeback in pass-and-play today, so that distinction doesn't matter yet.
+     */
+    fun undoLastMove(state: GameState): GameState
 }
 
 /** Synchronous on-device pass-and-play: both players share one device, one source of truth. */
@@ -40,4 +48,6 @@ class LocalGameSource : GameSource {
 
     override fun applyMove(state: GameState, move: Move): GameState =
         MoveGenerator.applyMove(state, move)
+
+    override fun undoLastMove(state: GameState): GameState = MoveGenerator.undoLastMove(state)
 }

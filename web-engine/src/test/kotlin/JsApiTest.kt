@@ -80,6 +80,26 @@ class JsApiTest {
     }
 
     @Test
+    fun undoLastMoveRevertsSideToMoveAndLastMove() {
+        val game = JsGame()
+        assertTrue(game.applyMoveExact(4, 1, 4, 3, null)) // e4
+        assertTrue(game.applyMoveExact(4, 6, 4, 4, null)) // e5
+        assertEquals("e5", game.lastMoveAlgebraic())
+
+        assertTrue(game.undoLastMove())
+        assertEquals("black", game.sideToMove())
+        assertEquals("e4", game.lastMoveAlgebraic())
+    }
+
+    @Test
+    fun undoLastMoveOnTheStartingPositionDoesNothingAndReportsFailure() {
+        val game = JsGame()
+        assertTrue(!game.undoLastMove())
+        assertEquals("white", game.sideToMove())
+        assertNull(game.lastMoveAlgebraic())
+    }
+
+    @Test
     fun sideToMoveKingSquareIfInCheckIsNullWhenNotInCheck() {
         val game = JsGame()
         assertNull(game.sideToMoveKingSquareIfInCheck())

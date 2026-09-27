@@ -155,6 +155,14 @@ fun GameScreen(
             )
 
             Spacer(Modifier.height(16.dp))
+            OutlinedButton(
+                onClick = viewModel::takeback,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = uiState.canTakeback
+            ) {
+                Text("Takeback")
+            }
+            Spacer(Modifier.height(12.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)

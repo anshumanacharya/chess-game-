@@ -143,6 +143,13 @@ class JsGame {
         return true
     }
 
+    /** Undoes the most recent move ("takeback"); returns whether one was actually undone. */
+    fun undoLastMove(): Boolean {
+        if (state.moveHistory.isEmpty()) return false
+        state = MoveGenerator.undoLastMove(state)
+        return true
+    }
+
     fun lastMoveAlgebraic(): String? = state.moveHistory.lastOrNull()?.toShortAlgebraic()
 
     /** The full last move (from/to squares included), for highlighting it on the board. */
