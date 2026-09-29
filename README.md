@@ -19,7 +19,8 @@ the real target.)
   the side panel, ordered to match whoever's at each end of the board
 - Resign, offer/accept a draw, or start a rematch
 - Optional single-player mode against a built-in bot (a rough ~1000 Elo
-  design target, not a calibrated rating) — when playing as Black, the board
+  design target, not a calibrated rating) that plays real opening theory
+  from a bundled, offline book built from Lichess's opening data — when playing as Black, the board
   flips so your own pieces are always at the bottom
 
 ## Project layout

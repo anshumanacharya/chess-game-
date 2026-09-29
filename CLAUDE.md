@@ -80,6 +80,12 @@ shared engine changed.
   in `build.gradle.kts`) — a bot-only push there doesn't trigger this repo's
   CI, so `deploy-pages.yml` also runs on a daily cron to keep the live site
   current.
+- Bot opening book: lives in `chess-game-bot` (`OpeningBook.kt`,
+  generated `OpeningBookData.kt`, built by `chess-bot/tools/generate_opening_book.py`
+  from Lichess's CC0 chess-openings dataset). Bundled as source, so it works
+  offline and identically on Android (`LocalBotSource` and `RemoteBotSource`'s
+  WebView) and web. Controlled by `BotConfig.bookMaxPlies` /
+  `bookDeviationProbability`.
 - **Visual parity, not mechanism parity, across platforms**: when porting a
   UI change between web and Android, replicate the *outcome* using each
   platform's native idiom (e.g. web's CSS-Grid side-panel-height trick has
@@ -158,6 +164,19 @@ shared engine changed.
   `grid-template-rows: minmax(0, 1fr)`) for `.moves-list` to scroll internally — with
   `flex: 1` inside `#app`'s column flexbox the height is ignored and a long game stretches the
   page (and the board with it). `render()` rebuilds the DOM, so it re-pins the list's scroll.
+- Lichess's opening-explorer API returns 401 without a login — don't build
+  the book on live explorer calls. The book uses the static chess-openings
+  dataset instead (weights = number of lines through a move, not real game
+  frequency). Only applies to standard-start games; `OpeningBook` verifies this
+  by replaying `moveHistory`, because custom-position tests have an empty
+  history that would otherwise look like the start position.
+- Building locally with uncommitted changes in `chess-bot/`: the root
+  `updateBotSubmodule` task runs `git submodule update --remote` and would
+  replace them. Pass `-x updateBotSubmodule` (e.g.
+  `./gradlew :web-engine:browserProductionWebpack -x updateBotSubmodule`), and
+  commit + push the bot repo first for anything meant to ship. The bot repo's
+  own `chess-engine-src` submodule is empty in this checkout, so bot tests run
+  in a scratch Gradle project with `chess-engine/src` copied in as a source dir.
 - CI (`deploy-pages.yml`) checks out with `submodules: true` (not
   `--recursive`) deliberately — the bot submodule's own nested submodule
   (a copy of *this* repo, used only so it can build standalone) isn't needed
@@ -166,6 +185,15 @@ shared engine changed.
 ## Current State & Next Steps
 
 Completed this session:
+- Added an offline bot opening book (bot repo commit `a66c067`, parent
+  `252fee5`): weighted book moves for the first 4/8/16 plies
+  (BEGINNER/CASUAL/STRONG) from Lichess chess-openings data, with per-preset
+  deviation so weaker presets don't sound like theory. 18 bot tests pass
+  (including an every-line-is-legal replay); rebuilt `web/chess-engine.js`
+  (65 KB → 246 KB) and spot-checked in Node (mostly d4/e4 with variety).
+  Android was **not** compiled locally — rely on CI. Possible follow-ups:
+  transposition handling (key by position instead of move list), seeding
+  weights from explorer stats (needs a Lichess token).
 - Added a takeback button: undoes the last move and hands the turn back to
   whoever made it. **Pass-and-play only** (deliberately, per the user) —
   vs-bot games don't show the button, since undoing just the bot's move
