@@ -1,5 +1,18 @@
 package com.chessapp.localclock.ui.screens
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.requiredWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
@@ -52,6 +66,7 @@ fun GameScreen(
     val uiState = viewModel.uiState
     var showResignConfirm by rememberSaveable { mutableStateOf(false) }
     var showDrawOfferConfirm by rememberSaveable { mutableStateOf(false) }
+    var sidePanelHidden by rememberSaveable { mutableStateOf(false) }
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -66,11 +81,18 @@ fun GameScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+    // Side panel's slot: the original 1/4 column share plus its 24dp gap, as an explicit width so
+    // it can animate to 0 and hand the whole row to the board.
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+    val panelSlotWidth: Dp = (maxWidth - 48.dp - 24.dp) / 4 + 24.dp
+    val animatedSlotWidth by animateDpAsState(
+        targetValue = if (sidePanelHidden) 0.dp else panelSlotWidth,
+        label = "sidePanelSlot"
+    )
     Row(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
-        horizontalArrangement = Arrangement.spacedBy(24.dp)
+            .padding(24.dp)
     ) {
         // Whichever color sits "near" the human (bottom of the board) gets the bottom bar too,
         // matching the board flip in ChessBoard. In pass-and-play there's no single human seat,
@@ -83,7 +105,7 @@ fun GameScreen(
 
         Column(
             modifier = Modifier
-                .weight(3f)
+                .weight(1f)
                 .fillMaxHeight(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -136,10 +158,19 @@ fun GameScreen(
             )
         }
 
+        // Clipped slot whose width animates; the content keeps its full width (requiredWidth) so
+        // it slides out of view instead of squashing.
+        Box(
+            modifier = Modifier
+                .width(animatedSlotWidth)
+                .fillMaxHeight()
+                .clipToBounds()
+        ) {
         Column(
             modifier = Modifier
-                .weight(1f)
+                .requiredWidth(panelSlotWidth)
                 .fillMaxHeight()
+                .padding(start = 24.dp)
         ) {
             Text(
                 "Moves",
@@ -187,6 +218,31 @@ fun GameScreen(
                 Text("New setup")
             }
         }
+        }
+    }
+
+    // A tab on the right screen edge (inside the 24dp outer padding, so it never covers the
+    // panel) that stays put while the panel slides.
+    Surface(
+        modifier = Modifier
+            .align(Alignment.CenterEnd)
+            .size(width = 24.dp, height = 64.dp)
+            .semantics {
+                contentDescription = if (sidePanelHidden) "Show side panel" else "Hide side panel"
+            }
+            .clickable(role = Role.Button) { sidePanelHidden = !sidePanelHidden },
+        shape = RoundedCornerShape(topStart = 10.dp, bottomStart = 10.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text(
+                if (sidePanelHidden) "‹" else "›",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
     }
 
     uiState.pendingPromotion?.let {

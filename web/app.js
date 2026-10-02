@@ -71,6 +71,7 @@
   var botMoveTimeout = null;
   var isBotThinking = false;
   var currentBotColor = null; // "white" | "black" | null
+  var sidePanelHidden = false; // survives render(), which rebuilds the whole screen
 
   var root = document.getElementById("app");
 
@@ -475,6 +476,22 @@
     screenEl.appendChild(boardPane);
 
     screenEl.appendChild(renderSidePanel());
+
+    // Toggled in place (not via render()) so the CSS transition actually animates; the flag above
+    // only matters for the next full rebuild, which starts in the already-final state.
+    var toggle = el("button", "panel-toggle");
+    function syncToggle() {
+      screenEl.classList.toggle("panel-hidden", sidePanelHidden);
+      toggle.textContent = sidePanelHidden ? "‹" : "›";
+      toggle.setAttribute("aria-label", sidePanelHidden ? "Show side panel" : "Hide side panel");
+      toggle.setAttribute("aria-expanded", String(!sidePanelHidden));
+    }
+    toggle.addEventListener("click", function () {
+      sidePanelHidden = !sidePanelHidden;
+      syncToggle();
+    });
+    syncToggle();
+    screenEl.appendChild(toggle);
 
     return screenEl;
   }

@@ -17,6 +17,8 @@ the real target.)
   rotating 180° each turn so whoever's moving reads the board right-side up
 - Each side's clock, captured pieces, and material advantage sit together in
   the side panel, ordered to match whoever's at each end of the board
+- A tab on the right screen edge slides the side panel off and back (web and Android); with
+  it hidden, the board uses the full width. The board is always square, in any window shape
 - Resign, offer/accept a draw, or start a rematch
 - Optional single-player mode against a built-in bot (a rough ~1000 Elo
   design target, not a calibrated rating) that plays real opening theory

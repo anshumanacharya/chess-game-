@@ -185,6 +185,42 @@ button {
      #app's flex sizing). dvh (with a vh fallback) tracks mobile browsers' collapsing toolbars. */
   height: 100vh;
   height: 100dvh;
+  overflow-x: clip;
+  transition: grid-template-columns 0.3s ease, column-gap 0.3s ease;
+}
+
+/* Side panel slid off: the board column takes the full width. The panel keeps its own layout box
+   (zero-width column, clipped) so its contents never reflow while sliding. */
+.game-screen.panel-hidden {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0fr);
+  column-gap: 0;
+}
+
+.game-screen.panel-hidden .side-panel {
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* A tab on the right screen edge, in the .game-screen padding gutter so it never covers the
+   panel, and fixed so it stays put while the panel slides. */
+.panel-toggle {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 64px;
+  padding: 0;
+  border: 1.5px solid var(--accent-ink);
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  background: var(--surface);
+  color: var(--accent-ink);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 5;
 }
 
 @media (max-width: 820px) {
@@ -195,6 +231,10 @@ button {
     flex-direction: column;
     flex: 1;
     height: auto;
+  }
+
+  .game-screen.panel-hidden .side-panel {
+    display: none;
   }
 
   .game-screen .moves-list {
@@ -245,6 +285,7 @@ button {
   flex-direction: column;
   gap: 14px;
   min-width: 220px;
+  transition: transform 0.3s ease, opacity 0.3s ease;
   /* Without this, a flex item that's itself a flex container won't shrink below its content's
      natural height, so a long moves list would grow the whole panel taller than the board
      instead of scrolling inside .moves-list as intended (.board-pane sets this for the same

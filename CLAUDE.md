@@ -144,6 +144,10 @@ shared engine changed.
   `<path android:.../>` by hand when hand-converting SVG → VectorDrawable.
   SVG `fill="none"` → omit `android:fillColor` entirely; an SVG path with no
   explicit `fill` defaults to black per spec.
+- Serving `web/` locally for testing: don't use `preview_start {name}` (the root
+  `.claude/launch.json` starts an unrelated project). Run
+  `python -m http.server 8765` in `web/`, open it with `preview_start {url}`, and
+  hard-refresh — the browser caches `app.js`/`style.css` aggressively.
 - Gradle `dependencyResolutionManagement.repositoriesMode` must stay
   `PREFER_PROJECT` (not the default-safer `FAIL_ON_PROJECT_REPOS` or
   `PREFER_SETTINGS`): the Kotlin/JS plugin registers its own Node/Yarn repos
@@ -185,6 +189,30 @@ shared engine changed.
 ## Current State & Next Steps
 
 Completed this session:
+- Web board is always square: `.board-wrap` is a `container-type: size` box and
+  `.board-grid` is `min(100cqw, 100cqh)` square. The old `width: 100%` +
+  `height: 100%` overrode `aspect-ratio`, so a portrait window (e.g. 2200x2400)
+  stretched the board into a rectangle. In the stacked layout (<=820px, height
+  `auto`, nothing to contain against) `.game-screen .board-wrap` sizes from width
+  with `aspect-ratio: 1/1` — those overrides need the `.game-screen` prefix to
+  beat the later base rules. Shipped in `52d773e`; Pages deploy succeeded.
+- Collapsible side panel, both platforms: a fixed 24x64 tab on the right screen edge
+  (in the 24px outer padding, so it never covers the panel) slides the panel off
+  and back; the board takes the full width while hidden.
+  - Web: `sidePanelHidden` (module var, since `render()` rebuilds the DOM) +
+    `.panel-hidden` on `.game-screen`, toggled **in place** in
+    `renderGameScreen()` so the CSS transition animates (a full re-render would
+    skip it). Grid columns go to `minmax(0,1fr) minmax(0,0fr)`, panel gets
+    `translateX(100%)` + fade; `overflow-x: clip` stops the off-screen panel causing
+    a horizontal scrollbar. <=820px just `display: none`s it (no slide).
+    Verified in a real browser by the user; the in-app preview pane is a background
+    tab, so transitions freeze there — measure end states with `transition: none`.
+  - Android: `GameScreen.kt` wraps the row in `BoxWithConstraints`; the panel sits in a
+    clipped `Box` whose width is `animateDpAsState` (slot = 1/4 share + 24dp gap -> 0)
+    with the content at `requiredWidth(panelSlotWidth)` so it slides rather than
+    squashes; the board column is `weight(1f)` and takes the rest. State is
+    `rememberSaveable`. **Not compiled or run** — rely on CI, and add an on-device
+    check (animation, tab not overlapping, rotation keeps state) to issue #5.
 - Added an offline bot opening book (bot repo commit `a66c067`, parent
   `252fee5`): weighted book moves for the first 4/8/16 plies
   (BEGINNER/CASUAL/STRONG) from Lichess chess-openings data, with per-preset
