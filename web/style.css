@@ -201,6 +201,18 @@ button {
     flex: none;
     height: 160px;
   }
+
+  /* Height is auto here, so there's nothing to contain against: size from the width instead. */
+  .game-screen .board-wrap {
+    flex: none;
+    container-type: normal;
+    aspect-ratio: 1 / 1;
+  }
+
+  .game-screen .board-grid {
+    width: 100%;
+    height: 100%;
+  }
 }
 
 .board-pane {
@@ -357,6 +369,9 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Lets .board-grid size itself against this box's width AND height, so the board is the
+     largest square that fits in either orientation. */
+  container-type: size;
 }
 
 .board-grid {
@@ -364,9 +379,8 @@ button {
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
   aspect-ratio: 1 / 1;
-  width: min(100%, 100%);
-  height: 100%;
-  max-width: 100%;
+  width: min(100cqw, 100cqh);
+  height: min(100cqw, 100cqh);
   border: 2px solid #3E3A34;
   border-radius: 6px;
   overflow: hidden;
