@@ -1,5 +1,11 @@
 (function () {
   "use strict";
+  var movesExpanded = false;
+  var compactLayout = window.matchMedia("(max-width: 820px)");
+  compactLayout.addEventListener("change", function () {
+    var section = document.querySelector(".moves-section");
+    if (section) section.open = !compactLayout.matches || movesExpanded;
+  });
 
   var ChessEngine = window["web-engine"];
   var JsGame = ChessEngine.JsGame;
@@ -692,7 +698,12 @@
 
     var middle = el("div", "side-panel-middle");
 
-    middle.appendChild(el("div", "moves-title", "Moves"));
+    var movesSection = el("details", "moves-section");
+    movesSection.open = !compactLayout.matches || movesExpanded;
+    movesSection.addEventListener("toggle", function () {
+      if (compactLayout.matches) movesExpanded = movesSection.open;
+    });
+    movesSection.appendChild(el("summary", "moves-title", "Moves"));
 
     var movesList = el("div", "moves-list");
     var history = moveHistoryPairs();
@@ -703,7 +714,8 @@
       row.appendChild(el("span", null, pair[1] || ""));
       movesList.appendChild(row);
     });
-    middle.appendChild(movesList);
+    movesSection.appendChild(movesList);
+    middle.appendChild(movesSection);
 
     var takebackButton = el("button", "outlined-button", "Takeback");
     takebackButton.disabled = !canTakeback();
