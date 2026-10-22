@@ -4,6 +4,7 @@
   --surface-variant: #EDEBE6;
   --text: #1B1B1F;
   --text-muted: #6B6B6F;
+  --captured-outline: #FFFFFF;
   /* lichess.org's default ("brown") board theme. The green legal-move dot it replaced had poor
      contrast on the dark squares; this dark, near-black tone (also lichess's own choice) reads
      clearly on both. */
@@ -31,6 +32,7 @@
     --surface-variant: #2B2A28;
     --text: #F2F0ED;
     --text-muted: #A9A79F;
+    --captured-outline: #C4C1BA;
     --accent-ink: #9FB0BE;
     --on-accent-ink: #1B1B1B;
   }
@@ -317,28 +319,31 @@ button {
   min-height: 18px;
 }
 
-/* The captured pieces sit on a board-light swatch (like they would on the board itself) rather
-   than the page background: Black's pieces all but disappear against the dark-theme page. */
+/* Transparent artwork sits directly on the theme background. A fine silhouette outline
+   keeps black pieces readable in dark mode without adding a contrasting rectangular tile. */
 .captured-pieces {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 2px;
-  padding: 2px 4px;
-  border-radius: 6px;
-  background: var(--board-light);
+  padding: 2px 0;
 }
 
 .captured-row .piece-glyph {
   width: 20px;
   height: 20px;
+  filter: drop-shadow(0.6px 0 0 var(--captured-outline))
+          drop-shadow(-0.6px 0 0 var(--captured-outline))
+          drop-shadow(0 0.6px 0 var(--captured-outline))
+          drop-shadow(0 -0.6px 0 var(--captured-outline));
 }
 
 .material-advantage {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-muted);
+  color: var(--text);
   margin-left: 4px;
+  font-variant-numeric: tabular-nums;
 }
 
 /* DSEG7 Classic (SIL Open Font License, fonts/DSEG-LICENSE.txt): a seven-segment LCD face. */
