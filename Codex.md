@@ -4,15 +4,18 @@
 - GitHub remains the single source of truth. Keep local changes reviewable through pull requests.
 - Each work session that produces changes should end with a pull request. A bare push does not satisfy session completion.
 - Proactively prompt the user about preparing or opening the pull request when wrapping up a session or whenever necessary. This workflow records that expectation; it does not grant blanket permission to create a PR, merge, or deploy.
+- From 23 October 2026, group subsequent iterative updates together in the next PR (called "PR ten" by the user; GitHub assigns the actual number). Accumulate these changes on `iteration/next-ui-updates` rather than opening a separate PR for every small iteration. This grouping instruction refines the session-end PR expectation above.
+- Skip optional repeated browser checks and test-suite runs unless the user requests them or a new concrete failure warrants checking. Required CI and branch protections still apply and must not be disabled or bypassed. Report skipped checks honestly; never describe them as passed.
+- Keep this workflow note local until actual iteration work is ready for the grouped PR; do not create an empty placeholder PR or commit/push solely for this note.
 
 # Issue tracker
 
-## Fixed: Board exceeds viewport height on narrow landscape screens
+## Open: Board exceeds viewport height on narrow landscape screens
 
-- **Status:** Fixed locally; PR and deployment verification pending (23 October 2026).
+- **Status:** Reopened. User rejected PR #9 and requested restoring PR #8 on 23 October 2026; the original landscape limitation is accepted again pending a future approved design.
 - **Scope:** Web responsive layout (`web/`)
 - **Observed:** 23 October 2026, in the local browser build
-- **Implementation:** Compact responsive layout on `ui/compact-responsive-game`; original reproduction measurements below are retained as history.
+- **Implementation:** PR #9's compact responsive layout is reverted. Restore the PR #8 UI at `7eb14a8`, retaining its captured-piece theme fix. Original reproduction measurements below remain applicable.
 
 ### Reproduction
 
@@ -53,7 +56,7 @@ The board should remain square and maximize its size within **both available wid
 - [ ] Resize or rotate between portrait and landscape during a game; board stays square and adapts correctly.
 - [ ] Check nearby narrow sizes and the desktop layout for regressions.
 
-The original acceptance checklist above records the reported issue. The session below records the replacement layout and its verification; narrow screens now keep compact game information visible rather than offering a panel-hide mode.
+The original acceptance checklist above records the unresolved issue. The PR #9 session below is retained as history of a rejected implementation; its compact layout is no longer the intended UI.
 
 # Session record
 
@@ -76,3 +79,17 @@ The original acceptance checklist above records the reported issue. The session 
 - Fresh interactive dark-mode capture sequences at 1280 × 800, 390 × 844, and 740 × 360 verified White +1, equal material, Black +1, White +8, both sides' captured artwork, unchanged transparent backgrounds, and turn rotation. Verified narrow toggle absence, Moves expand/collapse and persistence across a move, desktop panel close/reopen, and hidden desktop panel restoration after narrowing. Bot setup and an e4/e5 bot reply worked; Takeback remains disabled against the bot.
 - Light-mode interactive testing remains limited by the previously denied temporary browser origin; no security workaround was attempted. Existing theme tokens and the PR #8 captured-piece outline/score styles are preserved. This session does not claim live light-mode gameplay verification.
 - `node --check web/app.js` and `git diff --check` pass. Browser evidence and test artifacts remain outside the repository. PR #7 remains untouched. User authorized PR, normal merge after CI, Pages deployment, and public browser verification for this change; final results will be reported with the PR.
+
+## 23 October 2026: Deployment completion and next iteration workflow
+
+- PR #9 merged with normal merge commit `125a6ee`; Engine and Android CI passed. Pages run `39865826872` succeeded for that commit. Published `app.js`, `style.css`, and `index.html` matched merged source. Live dark-mode capture and responsive checks passed at 1280 × 800, 390 × 844, and 740 × 360, including the 336 × 336 landscape board. Interactive light-mode testing remains unverified as described above.
+- User requested grouped subsequent iterations in the next PR and no optional repeated tests. Recorded that preference in Development workflow, retaining required CI/protections and honest reporting of skipped tests.
+- Created local branch `iteration/next-ui-updates` for upcoming work. This documentation update was left uncommitted; no placeholder PR, push, repeat tests, or deployment was performed. PR #7 remains untouched. Awaiting the next UI instruction.
+
+## 23 October 2026: User-requested rollback to PR #8
+
+- User reported that PR #9 broke the UI and explicitly requested reverting it, creating and merging a rollback PR, and deploying the restored version. Do not continue the compact responsive redesign.
+- Reverted merge `125a6ee` with first-parent selection (`git revert -m 1`), preserving normal Git history. Restored `web/app.js` and `web/style.css` exactly to PR #8 merge `7eb14a8`; retained the captured-piece transparent backgrounds, theme-aware outlines, and material-score contrast from PR #8.
+- Preserved the uncommitted next-iteration workflow notes in a Git stash and an external temporary backup before rollback, then incorporated their text here without discarding session history. The rollback is real implementation work, so including these notes in its PR follows the earlier instruction against a documentation-only placeholder PR.
+- Reopened the known landscape overflow issue. Restored narrow screens use the original stacked side panel and right-edge hide/show toggle; future changes require a newly approved design.
+- Skipped optional repeated browser/capture suites per user preference. Narrow verification checks restored asset equality, required CI/protections, Pages deployment, and public asset parity. No test artifacts are included. PR #7 remains untouched.
